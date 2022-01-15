@@ -1,0 +1,8 @@
+streamdeck
+opencv-python
+Pillow
+
+pytest
+black
+reorder-python-imports
+
