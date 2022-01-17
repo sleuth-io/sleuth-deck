@@ -3,7 +3,8 @@ from os import path
 from os.path import dirname
 from typing import Optional
 
-from sleuthdeck.deck import Key, Deck
+from sleuthdeck.deck import Deck
+from sleuthdeck.deck import Key
 from sleuthdeck.plugins.sleuth import Sleuth
 
 
@@ -23,4 +24,3 @@ class RepositoryLockKey(Key):
     def _update(self):
         # todo: add periodic updates from sleuth to update actions and icon
         pass
-

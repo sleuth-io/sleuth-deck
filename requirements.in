@@ -1,6 +1,7 @@
 streamdeck
 opencv-python
 Pillow
+psutil
 
 pytest
 black

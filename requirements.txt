@@ -31,9 +31,9 @@ pillow==9.0.0
 platformdirs==2.4.1
     # via black
 pluggy==1.0.0
-    # via
-    #   -r requirements.in
-    #   pytest
+    # via pytest
+psutil==5.9.0
+    # via -r requirements.in
 py==1.11.0
     # via pytest
 pyparsing==3.0.6

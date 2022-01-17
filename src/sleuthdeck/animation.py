@@ -1,15 +1,15 @@
 import itertools
 import threading
 import time
-
 from fractions import Fraction
-from PIL import Image, ImageSequence
+
+from PIL import Image
+from PIL import ImageSequence
 from StreamDeck.ImageHelpers import PILHelper
 from StreamDeck.Transport.Transport import TransportError
 
 
 class Animations:
-
     def __init__(self, deck, fps: int = 30):
         self.deck = deck
         self.fps = fps
