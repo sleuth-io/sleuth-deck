@@ -1,7 +1,7 @@
 import os
 from functools import partial
 
-from sleuthdeck.actions import ChangeScene
+from sleuthdeck.actions import ChangeScene, PreviousScene
 from sleuthdeck.actions import Close
 from sleuthdeck.actions import MaximizeWindow
 from sleuthdeck.actions import MoveWindow
@@ -67,7 +67,7 @@ if __name__ == "__main__":
 
         scene2.add(
             (1, 2),
-            Key("Elephant_Walking_animated.gif", actions=[ChangeScene(scene1)]),
+            Key("Elephant_Walking_animated.gif", actions=[PreviousScene()]),
         )
 
         # scene1.set_key(0, sleuth.RepoLockKey(project="sleuth", deployment="application"))
