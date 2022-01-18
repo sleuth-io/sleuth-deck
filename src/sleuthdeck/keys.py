@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 from os import path
+from os.path import dirname
 from typing import Callable
 from typing import List
 from typing import Optional
@@ -56,7 +57,7 @@ class IconKey(Key):
             # Load a custom TrueType font and use it to overlay the key index, draw key
             # label onto the image a few pixels from the bottom of the key.
             draw = ImageDraw.Draw(image)
-            font = ImageFont.truetype("Roboto-Regular.ttf", 14)
+            font = ImageFont.truetype(path.join(dirname(__file__), "assets", "Roboto-Regular.ttf"), 14)
             draw.text(
                 (image.width / 2, image.height - 5),
                 text=text,

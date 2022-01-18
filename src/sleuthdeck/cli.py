@@ -4,6 +4,7 @@ import runpy
 import sys
 import threading
 import time
+import traceback
 from datetime import datetime
 from datetime import timedelta
 from multiprocessing import Queue
@@ -39,7 +40,13 @@ class ReloadingHandler(FileSystemEventHandler):
 
         try:
             while self._reloading_queue.get():
-                mod = runpy.run_module(mod_name)
+                try:
+                    mod = runpy.run_module(mod_name)
+                except:
+                    print(f"Error loading script")
+                    traceback.print_exc()
+                    continue
+
                 if "run" not in mod:
                     raise ValueError(f"Script {self.script} missing 'run' function")
 
@@ -50,7 +57,12 @@ class ReloadingHandler(FileSystemEventHandler):
                 print(f"Loaded new deck from {self.script}")
                 self.deck = deck
                 with deck:
-                    mod["run"](deck)
+                    try:
+                        mod["run"](deck)
+                    except Exception as e:
+                        print(f"Error: {e}")
+                        traceback.print_exc()
+                        continue
         except EOFError:
             if self.deck and self.deck.stream_deck.is_open():
                 self.deck.close()

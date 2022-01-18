@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import threading
 import time
+import traceback
 from asyncio import Future
 from asyncio import Task
 from dataclasses import dataclass
@@ -53,8 +54,11 @@ class Key:
 
 class Deck:
     def __init__(self):
+        print("Scanning for stream decks")
         streamdecks = DeviceManager().enumerate()
         self.stream_deck: StreamDeck = streamdecks[0]
+        print(f"Found stream deck: {self.stream_deck.id()}")
+
         self._animation = Animations(self.stream_deck)
         self._scene = Scene()
         self._last_scene: Scene = self._scene
@@ -191,12 +195,14 @@ class KeyScene(Scene):
 
     def _run_actions(self, click: ClickType, key: Key):
         key.clicked_on = None
-        actions = self._actions.get(key, key.actions)
+        actions = list(self._actions.get(key, key.actions))
         for action in actions:
             try:
+                print(f"Running {action.__class__.__name__}")
                 action.execute(self, key, click)
             except Exception as e:
                 print(f"Error running action {action}: {e}")
+                traceback.print_exc()
 
     def add(
         self,

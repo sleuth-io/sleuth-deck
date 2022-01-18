@@ -1,17 +1,21 @@
 from os import path
 from os.path import dirname
+from time import sleep
 from typing import List
 from typing import Optional
 from urllib.parse import urlparse
 
-from sleuthdeck.actions import CloseWindow
+from pyautogui import press
+
+from sleuthdeck.actions import CloseWindow, SendHotkey
 from sleuthdeck.actions import Command
 from sleuthdeck.actions import MaximizeWindow
-from sleuthdeck.deck import Action
+from sleuthdeck.deck import Action, Key, ClickType
 from sleuthdeck.deck import KeyScene
 from sleuthdeck.deck import Updatable
 from sleuthdeck.keys import detect_windows_toggle
 from sleuthdeck.keys import IconKey
+from sleuthdeck.windows import get_window
 
 
 class StartMeetingKey(IconKey, Updatable):
@@ -20,9 +24,11 @@ class StartMeetingKey(IconKey, Updatable):
         url: str = None,
         text: Optional[str] = None,
         actions: List[Action] = None,
+        close_actions: List[Action] = None,
         **kwargs,
     ):
         self._original_actions = list(actions if actions else [StartMeeting(url)])
+        self._close_actions = close_actions if close_actions else [EndMeeting()]
         super().__init__(
             image_file=path.join(dirname(__file__), "assets", "us.zoom.Zoom.png"),
             actions=list(self._original_actions),
@@ -51,7 +57,7 @@ class StartMeetingKey(IconKey, Updatable):
         )
         self._scene.update_image(self)
         self.actions.clear()
-        self.actions.append(EndMeeting())
+        self.actions.extend(self._close_actions)
 
     def _on_closed(self):
         self.image = IconKey.load_image(
@@ -72,6 +78,18 @@ class StartMeeting(Command):
         )
 
 
-class EndMeeting(CloseWindow):
+class EndMeeting(SendHotkey):
     def __init__(self):
-        super().__init__("Zoom Meeting")
+        super().__init__("Zoom Meeting", "alt", "q")
+
+    def execute(self, scene: KeyScene, key: Key, click: ClickType):
+        super().execute(scene, key, click)
+        w = get_window("Zoom Meeting")
+        if w:
+            w.focus()
+            sleep(.5)
+            print("pressing enter")
+            press("enter")
+
+
+

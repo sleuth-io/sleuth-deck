@@ -1,12 +1,16 @@
 import signal
 import subprocess
+from time import sleep
+from typing import Optional, Union
+
+from pyautogui import hotkey
 
 from sleuthdeck.deck import Action
 from sleuthdeck.deck import ClickType
 from sleuthdeck.deck import Key
 from sleuthdeck.deck import KeyScene
 from sleuthdeck.deck import Scene
-from sleuthdeck.windows import get_window
+from sleuthdeck.windows import get_window, By
 
 
 class Command(Action):
@@ -39,7 +43,7 @@ class Close(Action):
 
 
 class MaximizeWindow(Action):
-    def __init__(self, title: str):
+    def __init__(self, title: Union[str, By]):
         self.title = title
 
     def execute(self, scene: KeyScene, key: Key, click: ClickType):
@@ -50,8 +54,16 @@ class MaximizeWindow(Action):
             print("No window found")
 
 
+class Pause(Action):
+    def __init__(self, seconds: Union[float, int]):
+        self.seconds = seconds
+
+    def execute(self, scene: KeyScene, key: Key, click: ClickType):
+        sleep(self.seconds)
+
+
 class CloseWindow(Action):
-    def __init__(self, title: str):
+    def __init__(self, title: Union[str, By]):
         self.title = title
 
     def execute(self, scene: KeyScene, key: Key, click: ClickType):
@@ -59,11 +71,11 @@ class CloseWindow(Action):
         if window:
             window.close()
         else:
-            print("No window found")
+            print(f"No window found with {self.title}")
 
 
 class MoveWindow(Action):
-    def __init__(self, title: str, x: int, y: int, width: int, height: int):
+    def __init__(self, title: Union[str, By], x: int, y: int, width: int, height: int):
         self.x = x
         self.y = y
         self.width = width
@@ -76,3 +88,17 @@ class MoveWindow(Action):
             window.move(self.x, self.y, self.width, self.height)
         else:
             print("No window found")
+
+
+class SendHotkey(Action):
+    def __init__(self, title: Union[str, By], *hotkey: str):
+        self.title = title
+        self.hotkey = hotkey
+
+    def execute(self, scene: KeyScene, key: Key, click: ClickType):
+        print("sending key")
+        window = get_window(self.title, attempts=5 * 10)
+        print("got window")
+        window.focus()
+        hotkey(*self.hotkey)
+        print("sent")

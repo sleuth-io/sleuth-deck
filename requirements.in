@@ -6,6 +6,7 @@ pydub
 selenium
 obs-websocket-py
 watchdog
+pyautogui
 
 pytest
 black

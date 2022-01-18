@@ -1,5 +1,7 @@
 .PHONY: run tunnel client help venv db db-migrate db-makemigrations format
 
+SHELL := /bin/bash
+
 
 # Help system from https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
 .DEFAULT_GOAL := help
@@ -18,4 +20,5 @@ format: ## Format the code
 	venv/bin/reorder-python-imports --py38-plus `find src -name "*.py"` || venv/bin/black src --target-version py38
 
 run: ## Run the app
-	cd src && ../venv/bin/python -m main
+	source .secrets
+	cd src && ../venv/bin/python -m sleuthdeck.cli work.py
