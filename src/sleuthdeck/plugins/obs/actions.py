@@ -1,6 +1,8 @@
 from os import path
 from os.path import dirname
 from time import sleep
+from typing import Any
+from typing import Callable
 from typing import List
 from typing import Optional
 
@@ -20,6 +22,7 @@ from sleuthdeck.deck import Updatable
 from sleuthdeck.keys import detect_windows_toggle
 from sleuthdeck.keys import IconKey
 from sleuthdeck.windows import get_window
+from websocket import WebSocketConnectionClosedException
 
 
 class OBSKey(IconKey):
@@ -42,14 +45,20 @@ class OBSKey(IconKey):
         self._started = False
         self.ws = obsws(host, port, password)
 
-    @property
-    def obs(self) -> obsws:
+    def _ensure_connected(self):
         if self._started:
             return self.ws
 
         self.ws.connect()
         self._started = True
-        return self.ws
+
+    def obs(self, *args, **kwargs) -> Any:
+        self._ensure_connected()
+        try:
+            return self.ws.call(*args, **kwargs)
+        except WebSocketConnectionClosedException as e:
+            self._started = False
+            return self.obs(*args, **kwargs)
 
 
 class ChangeScene(Action):
@@ -57,4 +66,4 @@ class ChangeScene(Action):
         self.name = name
 
     def execute(self, scene: KeyScene, key: OBSKey, click: ClickType):
-        key.obs.call(requests.SetCurrentScene(self.name))
+        key.obs(requests.SetCurrentScene(self.name))
