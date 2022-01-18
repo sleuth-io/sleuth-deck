@@ -99,6 +99,8 @@ typing-extensions==4.0.1
     # via black
 urllib3[secure]==1.26.8
     # via selenium
+watchdog==1.0.2
+    # via -r requirements.in
 websocket-client==1.2.3
     # via obs-websocket-py
 wsproto==1.0.0

@@ -5,6 +5,7 @@ psutil
 pydub
 selenium
 obs-websocket-py
+watchdog
 
 pytest
 black

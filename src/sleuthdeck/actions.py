@@ -1,3 +1,4 @@
+import signal
 import subprocess
 
 from sleuthdeck.deck import Action
@@ -34,6 +35,7 @@ class PreviousScene(Action):
 class Close(Action):
     def execute(self, scene: KeyScene, key: Key, click: ClickType):
         scene.deck.close()
+        signal.raise_signal(signal.SIGINT)
 
 
 class MaximizeWindow(Action):

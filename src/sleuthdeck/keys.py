@@ -76,11 +76,11 @@ async def detect_windows_toggle(
         windows = get_windows()
         window_open = bool([w for w in windows if w.title == window_title])
         if window_open and not _window_open:
-            print("detected open")
+            print(f"Detected window '{window_title}' open")
             on_opened()
             _window_open = True
         elif not window_open and _window_open:
-            print("detected closed")
+            print(f"Detected window '{window_title}' closed")
             on_closed()
             _window_open = False
         await asyncio.sleep(1)

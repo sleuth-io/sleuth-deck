@@ -80,6 +80,9 @@ class Deck:
             loop.close()
 
     def __enter__(self):
+        if self.stream_deck.is_open():
+            self.close()
+
         self.stream_deck.open()
         self.stream_deck.reset()
         self._animation.start()
@@ -121,13 +124,7 @@ class Deck:
             self._animation.clear(pos)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        # Wait until all application threads have terminated (for this example,
-        # this is when all deck handles are closed).
-        for t in threading.enumerate():
-            try:
-                t.join()
-            except RuntimeError:
-                pass
+        pass
 
     def previous_scene(self):
         self.change_scene(self._last_scene)
@@ -194,13 +191,12 @@ class KeyScene(Scene):
 
     def _run_actions(self, click: ClickType, key: Key):
         key.clicked_on = None
-        try:
-            actions = self._actions.get(key, key.actions)
-            for action in actions:
+        actions = self._actions.get(key, key.actions)
+        for action in actions:
+            try:
                 action.execute(self, key, click)
-        except Exception as e:
-            print(f"exception: {e}")
-            raise
+            except Exception as e:
+                print(f"Error running action {action}: {e}")
 
     def add(
         self,
