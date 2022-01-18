@@ -1,6 +1,7 @@
 import os
 from functools import partial
 
+from sleuthdeck.actions import ChangeScene
 from sleuthdeck.actions import Close
 from sleuthdeck.actions import MaximizeWindow
 from sleuthdeck.actions import MoveWindow
@@ -26,9 +27,7 @@ if __name__ == "__main__":
         scene2 = deck.new_key_scene()
 
         Key = partial(IconKey, base_path=ASSETS_PATH)
-        scene1.add(
-            0, Key("Pressed.png", text="Blah", actions=[obs.ChangeScene(scene2)])
-        )
+        scene1.add(0, Key("Pressed.png", text="Blah", actions=[ChangeScene(scene2)]))
         scene1.add(
             1,
             zoom.StartMeetingKey(
@@ -68,7 +67,7 @@ if __name__ == "__main__":
 
         scene2.add(
             (1, 2),
-            Key("Elephant_Walking_animated.gif", actions=[obs.ChangeScene(scene1)]),
+            Key("Elephant_Walking_animated.gif", actions=[ChangeScene(scene1)]),
         )
 
         # scene1.set_key(0, sleuth.RepoLockKey(project="sleuth", deployment="application"))
