@@ -6,7 +6,7 @@ from sleuthdeck.deck import Key
 from sleuthdeck.deck import KeyScene
 
 
-class PlaySoundAction(Action):
+class Play(Action):
     def __init__(self, sound_file: str, gain: int = 0):
         sound = AudioSegment.from_file(sound_file)
         sound += gain

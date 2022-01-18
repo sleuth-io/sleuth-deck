@@ -199,7 +199,7 @@ class KeyScene(Scene):
             for action in actions:
                 action.execute(self, key, click)
         except Exception as e:
-            print("exception: {e}")
+            print(f"exception: {e}")
             raise
 
     def add(

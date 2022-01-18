@@ -1,4 +1,5 @@
 import re
+import time
 from typing import List
 from typing import Optional
 
@@ -19,8 +20,8 @@ class Window:
     def close(self):
         shell.run("wmctrl", "-ic", self.window_id)
 
-    def move_to_desktop(self, target_id):
-        shell.run("wmctrl", "-ir", self.window_id, "-t", target_id)
+    def move(self, x: int, y: int, width: int, height: int):
+        shell.run("wmctrl", "-ir", self.window_id, "-e", f"0,{x},{y},{width},{height}")
 
 
 def get_windows() -> List[Window]:
@@ -34,9 +35,11 @@ def get_windows() -> List[Window]:
     return result
 
 
-def get_window(title: str) -> Optional[Window]:
-    for window in get_windows():
-        if window.title == title:
-            return window
+def get_window(title: str, attempts: int = 1) -> Optional[Window]:
+    for attempt in range(attempts):
+        for window in get_windows():
+            if window.title == title:
+                return window
+        time.sleep(0.1)
 
     return None

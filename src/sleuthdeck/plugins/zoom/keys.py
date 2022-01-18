@@ -1,28 +1,31 @@
-import asyncio
-import subprocess
 from os import path
 from os.path import dirname
+from typing import List
 from typing import Optional
 from urllib.parse import urlparse
 
-from sleuthdeck import shell
+from sleuthdeck.actions import CloseWindow
 from sleuthdeck.actions import Command
-from sleuthdeck.colors import Color
+from sleuthdeck.actions import MaximizeWindow
 from sleuthdeck.deck import Action
-from sleuthdeck.deck import ClickType
-from sleuthdeck.deck import Key
 from sleuthdeck.deck import KeyScene
 from sleuthdeck.deck import Updatable
 from sleuthdeck.keys import detect_windows_toggle
 from sleuthdeck.keys import IconKey
-from sleuthdeck.windows import get_window
 
 
 class StartMeetingKey(IconKey, Updatable):
-    def __init__(self, url: str = None, text: Optional[str] = None, **kwargs):
+    def __init__(
+        self,
+        url: str = None,
+        text: Optional[str] = None,
+        actions: List[Action] = None,
+        **kwargs,
+    ):
+        self._original_actions = list(actions if actions else [StartMeeting(url)])
         super().__init__(
             image_file=path.join(dirname(__file__), "assets", "us.zoom.Zoom.png"),
-            actions=[StartMeetingAction(url)],
+            actions=list(self._original_actions),
             text=text,
             **kwargs,
         )
@@ -48,7 +51,7 @@ class StartMeetingKey(IconKey, Updatable):
         )
         self._scene.update_image(self)
         self.actions.clear()
-        self.actions.append(EndMeetingAction())
+        self.actions.append(EndMeeting())
 
     def _on_closed(self):
         self.image = IconKey.load_image(
@@ -56,10 +59,10 @@ class StartMeetingKey(IconKey, Updatable):
         )
         self._scene.update_image(self)
         self.actions.clear()
-        self.actions.append(StartMeetingAction(self._url))
+        self.actions.extend(self._original_actions)
 
 
-class StartMeetingAction(Command):
+class StartMeeting(Command):
     def __init__(self, url: str):
         result = urlparse(url)
         meeting_id = result.path.split("/")[-1]
@@ -69,10 +72,6 @@ class StartMeetingAction(Command):
         )
 
 
-class EndMeetingAction(Action):
-    def execute(self, scene: KeyScene, key: Key, click: ClickType):
-        window = get_window("Zoom Meeting")
-        if window:
-            window.close()
-        else:
-            print("No meeting to end")
+class EndMeeting(CloseWindow):
+    def __init__(self):
+        super().__init__("Zoom Meeting")
