@@ -2,6 +2,9 @@ streamdeck
 opencv-python
 Pillow
 psutil
+pydub
+selenium
+obs-websocket-py
 
 pytest
 black

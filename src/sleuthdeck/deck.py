@@ -10,7 +10,6 @@ from datetime import datetime
 from datetime import timedelta
 from enum import auto
 from enum import Enum
-from os import path
 from typing import Awaitable
 from typing import Callable
 from typing import Dict
@@ -20,8 +19,6 @@ from typing import Tuple
 from typing import Union
 
 from PIL import Image
-from PIL import ImageDraw
-from PIL import ImageFont
 from sleuthdeck import video
 from sleuthdeck.animation import Animations
 from StreamDeck.DeviceManager import DeviceManager
@@ -35,7 +32,7 @@ class ClickType(Enum):
 
 
 class Action:
-    def execute(self, scene: KeyScene, click: ClickType):
+    def execute(self, scene: KeyScene, key: Key, click: ClickType):
         pass
 
 
@@ -52,50 +49,6 @@ class Key:
 
     def connect(self, scene: KeyScene):
         pass
-
-
-class IconKey(Key):
-    def __init__(
-        self,
-        image_file: Optional[str] = None,
-        text: Optional[str] = None,
-        actions: List[Action] = None,
-        base_path: Optional[str] = None,
-    ):
-        self._image_file = (
-            image_file if not base_path else path.join(base_path, image_file)
-        )
-        self._text = text
-        self.actions = actions
-        self._scene = None
-        super().__init__(actions=actions)
-
-    def connect(self, scene: KeyScene):
-        self._scene = scene
-        if self._image_file:
-            image = IconKey.load_image(self._scene.deck, self._image_file, self._text)
-            self.image = image
-
-    @staticmethod
-    def load_image(deck, image_file: str, text: Optional[str] = None):
-        icon = Image.open(image_file)
-        bottom_margin = 0 if not text else 20
-        image = PILHelper.create_scaled_image(
-            deck.stream_deck, icon, margins=[0, 0, bottom_margin, 0]
-        )
-        if text:
-            # Load a custom TrueType font and use it to overlay the key index, draw key
-            # label onto the image a few pixels from the bottom of the key.
-            draw = ImageDraw.Draw(image)
-            font = ImageFont.truetype("Roboto-Regular.ttf", 14)
-            draw.text(
-                (image.width / 2, image.height - 5),
-                text=text,
-                font=font,
-                anchor="ms",
-                fill="white",
-            )
-        return image
 
 
 class Deck:
@@ -241,9 +194,13 @@ class KeyScene(Scene):
 
     def _run_actions(self, click: ClickType, key: Key):
         key.clicked_on = None
-        actions = self._actions.get(key, key.actions)
-        for action in actions:
-            action.execute(self, click)
+        try:
+            actions = self._actions.get(key, key.actions)
+            for action in actions:
+                action.execute(self, key, click)
+        except Exception as e:
+            print("exception: {e}")
+            raise
 
     def add(
         self,
@@ -293,6 +250,8 @@ class KeyScene(Scene):
         except asyncio.CancelledError:
             # ignore canceled task
             pass
+        except Exception as e:
+            print(f"Error: {e}")
 
     def deactivate(self):
         for pos, key in enumerate(self._keys):
