@@ -46,11 +46,11 @@ class IconKey(Key):
     ):
         icon = Image.open(image_file)
 
-        bottom_margin = 0 if not text else 20
+        text_margin = 0 if not text else 12
         image = PILHelper.create_scaled_image(
             deck.stream_deck,
             icon,
-            margins=[0, 0, bottom_margin, 0],
+            margins=[text_margin, 0, 0, 0],
             background=background_color,
         )
         if text:
@@ -59,7 +59,7 @@ class IconKey(Key):
             draw = ImageDraw.Draw(image)
             font = ImageFont.truetype(path.join(dirname(__file__), "assets", "Roboto-Regular.ttf"), 14)
             draw.text(
-                (image.width / 2, image.height - 5),
+                (image.width / 2, 12),
                 text=text,
                 font=font,
                 anchor="ms",

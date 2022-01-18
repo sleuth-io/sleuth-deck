@@ -17,6 +17,7 @@ ASSETS_PATH = os.path.join(os.path.dirname(__file__), "assets")
 
 
 def run(deck: Deck):
+    deck.stream_deck.set_brightness(70)
     scene1 = deck.new_key_scene()
     intro = deck.new_video_scene(
         os.path.join(ASSETS_PATH, "intro.mpg"),
