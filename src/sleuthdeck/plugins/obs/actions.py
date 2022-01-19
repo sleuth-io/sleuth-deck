@@ -26,6 +26,9 @@ class OBS:
     def change_scene(self, name: str):
         return ChangeScene(self, name)
 
+    def toggle_source(self, name: str, show: bool = True, scene: Optional[str] = None):
+        return ToggleSource(self, name, show, scene=scene)
+
     def _ensure_connected(self):
         if self._started:
             return self.ws
@@ -64,3 +67,14 @@ class ChangeScene(Action):
 
     def execute(self, scene: KeyScene, key: OBSKey, click: ClickType):
         self.obs.obs(requests.SetCurrentScene(self.name))
+
+
+class ToggleSource(Action):
+    def __init__(self, obs: OBS, name: str, show: bool = True, scene = None):
+        self.name = name
+        self.obs = obs
+        self.scene = scene
+        self._show = show
+
+    def execute(self, scene: KeyScene, key: OBSKey, click: ClickType):
+        self.obs.obs(requests.SetSceneItemRender(self.name, self._show, scene_name=self.scene))

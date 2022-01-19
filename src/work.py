@@ -56,7 +56,7 @@ def run(deck: Deck):
                       twitch.OpenChat(channel="mrdonbrown", hide_header=True),
                       MoveWindow("Twitch - Google Chrome", "9000", 0, 100, 100),
                       MaximizeWindow("Twitch - Google Chrome"),
-                      Pause(2),
+                      Pause(5),
                       SendHotkey(By.title("Twitch - Google Chrome"), "f11"),
                       obs.change_scene("Coding - Webcam"),
                   ]),
@@ -75,12 +75,32 @@ def run(deck: Deck):
         OBSKey(text="Firefox", actions=[obs.change_scene("Coding - Firefox")]),
     )
     scene1.add(
+        (1, 4),
+        OBSKey(text="Gopro", actions=[obs.change_scene("Coding - Gopro")]),
+    )
+    scene1.add(
         (2, 0),
         Key(
             "Elephant_Walking_animated.gif",
             text="Rimshot",
-            actions=[sound.Play("/home/mrdon/dev/twitch/sounds/rimshot.mp3", gain=-30)],
+            actions=[sound.Play("/home/mrdon/dev/twitch/sounds/rimshot.mp3", gain=-13)],
         ),
+    )
+    scene1.add(
+        (2, 1),
+        OBSKey(text="Overlays", actions=[obs.toggle_source("Chat message callout", False, scene="[Scene] Overlay - Full"),
+                                         Pause(.3),
+                                         obs.toggle_source("Section title", True, scene="[Scene] Overlay - Full"),
+                                         obs.toggle_source("Section byline", True, scene="[Scene] Overlay - Full")]),
+    )
+    scene1.add(
+        (2, 2),
+        OBSKey(text="Chat", actions=[
+            obs.toggle_source("Section title", False, scene="[Scene] Overlay - Full"),
+            obs.toggle_source("Section byline", False, scene="[Scene] Overlay - Full"),
+            Pause(.3),
+            obs.toggle_source("Chat message callout", True, scene="[Scene] Overlay - Full"),
+                                         ]),
     )
 
     # scene1.set_key(0, sleuth.RepoLockKey(project="sleuth", deployment="application"))
