@@ -1,4 +1,5 @@
 from os import path
+from os import path
 from os.path import dirname
 from time import sleep
 from typing import List
@@ -7,14 +8,13 @@ from urllib.parse import urlparse
 
 from pyautogui import press
 
-from sleuthdeck.actions import CloseWindow, SendHotkey
 from sleuthdeck.actions import Command
-from sleuthdeck.actions import MaximizeWindow
+from sleuthdeck.actions import SendHotkey
 from sleuthdeck.deck import Action, Key, ClickType
 from sleuthdeck.deck import KeyScene
 from sleuthdeck.deck import Updatable
-from sleuthdeck.keys import detect_windows_toggle
 from sleuthdeck.keys import IconKey
+from sleuthdeck.keys import detect_windows_toggle
 from sleuthdeck.windows import get_window
 
 
@@ -49,21 +49,12 @@ class StartMeetingKey(IconKey, Updatable):
         )
 
     def _on_opened(self):
-        self.image = IconKey.load_image(
-            self._scene.deck,
-            self._image_file,
-            f"{self._text} (Call)",
-            background_color="red",
-        )
-        self._scene.update_image(self)
+        self.update_icon(enabled=True)
         self.actions.clear()
         self.actions.extend(self._close_actions)
 
     def _on_closed(self):
-        self.image = IconKey.load_image(
-            self._scene.deck, self._image_file, f"{self._text}"
-        )
-        self._scene.update_image(self)
+        self.update_icon(enabled=False)
         self.actions.clear()
         self.actions.extend(self._original_actions)
 

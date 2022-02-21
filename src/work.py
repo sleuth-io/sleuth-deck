@@ -1,11 +1,11 @@
 import os
 from functools import partial
 
-from sleuthdeck.actions import MaximizeWindow
+from sleuthdeck.actions import MaximizeWindow, ToggleSleep, Toggle, UnMaximizeWindow
 from sleuthdeck.actions import MoveWindow
 from sleuthdeck.actions import SendHotkey, Command, CloseWindow, Pause
 from sleuthdeck.deck import Deck
-from sleuthdeck.keys import IconKey
+from sleuthdeck.keys import IconKey, FontAwesomeKey
 from sleuthdeck.plugins import sound
 from sleuthdeck.plugins import twitch
 from sleuthdeck.plugins import zoom
@@ -31,9 +31,12 @@ def run(deck: Deck):
         zoom.StartMeetingKey(
             text="OM",
             actions=[
+                CloseWindow(By.window_class("obs.obs"), wait=0),
                 Command("gtk-launch", "obs-zoom"),
                 zoom.StartMeeting("https://sleuth-io.zoom.us/j/82836110226"),
-                MoveWindow("Zoom Meeting", "9000", 0, 100, 100),
+                Pause(2),
+                UnMaximizeWindow("Zoom Meeting"),
+                MoveWindow("Zoom Meeting", "6000", 0, 100, 100),
                 MaximizeWindow("Zoom Meeting"),
                 Pause(1),
                 SendHotkey("Zoom Meeting", "alt", "v"),
@@ -54,7 +57,7 @@ def run(deck: Deck):
                   actions=[
                       Command("gtk-launch", "obs-twitch"),
                       twitch.OpenChat(channel="mrdonbrown", hide_header=True),
-                      MoveWindow("Twitch - Google Chrome", "9000", 0, 100, 100),
+                      MoveWindow("Twitch - Google Chrome", "12000", 0, 100, 100),
                       MaximizeWindow("Twitch - Google Chrome"),
                       Pause(5),
                       SendHotkey(By.title("Twitch - Google Chrome"), "f11"),
@@ -101,6 +104,18 @@ def run(deck: Deck):
             Pause(.3),
             obs.toggle_source("Chat message callout", True, scene="[Scene] Overlay - Full"),
                                          ]),
+    )
+
+    scene1.add(
+        (2, 3),
+        OBSKey(text="Sleep", actions=[ToggleSleep()]),
+    )
+
+    scene1.add(
+        (2, 4),
+        FontAwesomeKey(name="regular/lightbulb", actions=[Toggle(
+            on_enable=Command("/home/mrdon/dev/twitch/lights/on.sh"),
+            on_disable=Command("/home/mrdon/dev/twitch/lights/off.sh"))]),
     )
 
     # scene1.set_key(0, sleuth.RepoLockKey(project="sleuth", deployment="application"))

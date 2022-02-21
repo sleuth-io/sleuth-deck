@@ -40,6 +40,11 @@ class Window:
             "wmctrl", "-ir", self.window_id, "-b", "add,maximized_vert,maximized_horz"
         )
 
+    def unmaximize(self):
+        shell.run(
+            "wmctrl", "-ir", self.window_id, "-b", "remove,maximized_vert"
+        )
+
     def close(self):
         shell.run("wmctrl", "-ic", self.window_id)
 

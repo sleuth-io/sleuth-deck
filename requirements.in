@@ -7,6 +7,7 @@ selenium
 obs-websocket-py
 watchdog
 pyautogui
+cairosvg
 
 pytest
 black

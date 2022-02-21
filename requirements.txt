@@ -19,16 +19,26 @@ black==21.12b0
     # via -r requirements.in
 cached-property==1.5.2
     # via aspy.refactor-imports
+cairocffi==1.3.0
+    # via cairosvg
+cairosvg==2.5.2
+    # via -r requirements.in
 certifi==2021.10.8
     # via urllib3
 cffi==1.15.0
-    # via cryptography
+    # via
+    #   cairocffi
+    #   cryptography
 click==8.0.3
     # via black
 cryptography==36.0.1
     # via
     #   pyopenssl
     #   urllib3
+cssselect2==0.4.1
+    # via cairosvg
+defusedxml==0.7.1
+    # via cairosvg
 h11==0.12.0
     # via wsproto
 idna==3.3
@@ -54,7 +64,9 @@ packaging==21.3
 pathspec==0.9.0
     # via black
 pillow==9.0.0
-    # via -r requirements.in
+    # via
+    #   -r requirements.in
+    #   cairosvg
 platformdirs==2.4.1
     # via black
 pluggy==1.0.0
@@ -105,6 +117,10 @@ sortedcontainers==2.4.0
     # via trio
 streamdeck==0.9.0
     # via -r requirements.in
+tinycss2==1.1.1
+    # via
+    #   cairosvg
+    #   cssselect2
 toml==0.10.2
     # via pytest
 tomli==1.2.3
@@ -121,6 +137,10 @@ urllib3[secure]==1.26.8
     # via selenium
 watchdog==1.0.2
     # via -r requirements.in
+webencodings==0.5.1
+    # via
+    #   cssselect2
+    #   tinycss2
 websocket-client==1.2.3
     # via obs-websocket-py
 wsproto==1.0.0
