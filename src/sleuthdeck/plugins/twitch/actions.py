@@ -66,19 +66,12 @@ class TwitchKey(IconKey, Updatable):
         )
 
     def _on_opened(self):
-        self.image = IconKey.load_image(
-            self._scene.deck,
-            self._image_file,
-            f"{self._text} (ON)",
-            background_color="red",
-        )
-        self._scene.update_image(self)
+        self.update_icon(enabled=True)
         self.actions.clear()
         self.actions.append(CloseChatAction())
 
     def _on_closed(self):
-        self.image = IconKey.load_image(self._scene.deck, self._image_file, self._text)
-        self._scene.update_image(self)
+        self.update_icon(enabled=False)
         self.actions.clear()
         self.actions.extend(self._original_actions)
 
@@ -88,7 +81,7 @@ class OpenChat(Action):
         self.channel = channel
         self.hide_header = hide_header
 
-    def execute(self, scene: KeyScene, key: Key, click: ClickType):
+    def __call__(self, scene: KeyScene, key: Key, click: ClickType):
         driver: WebDriver = key.driver
         driver.get(f"https://www.twitch.tv/popout/{self.channel}/chat?popout=")
 
@@ -111,7 +104,7 @@ class OpenChat(Action):
 
 
 class CloseChatAction(Action):
-    def execute(self, scene: KeyScene, key: Key, click: ClickType):
+    def __call__(self, scene: KeyScene, key: Key, click: ClickType):
         window = get_window("Twitch - Google Chrome")
         if window:
             key.reset_driver()

@@ -65,7 +65,7 @@ class ChangeScene(Action):
         self.name = name
         self.obs = obs
 
-    def execute(self, scene: KeyScene, key: OBSKey, click: ClickType):
+    def __call__(self, scene: KeyScene, key: OBSKey, click: ClickType):
         self.obs.obs(requests.SetCurrentScene(self.name))
 
 
@@ -76,5 +76,5 @@ class ToggleSource(Action):
         self.scene = scene
         self._show = show
 
-    def execute(self, scene: KeyScene, key: OBSKey, click: ClickType):
+    def __call__(self, scene: KeyScene, key: OBSKey, click: ClickType):
         self.obs.obs(requests.SetSceneItemRender(self.name, self._show, scene_name=self.scene))

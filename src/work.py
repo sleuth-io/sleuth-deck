@@ -1,7 +1,9 @@
 import os
 from functools import partial
+from os.path import dirname
 
-from sleuthdeck.actions import MaximizeWindow, ToggleSleep, Toggle, UnMaximizeWindow
+from sleuthdeck.actions import MaximizeWindow, Toggle, UnMaximizeWindow, DeckBrightness, Sequential, ChangeScene, \
+    PreviousScene
 from sleuthdeck.actions import MoveWindow
 from sleuthdeck.actions import SendHotkey, Command, CloseWindow, Pause
 from sleuthdeck.deck import Deck
@@ -19,13 +21,13 @@ ASSETS_PATH = os.path.join(os.path.dirname(__file__), "assets")
 def run(deck: Deck):
     deck.stream_deck.set_brightness(70)
     scene1 = deck.new_key_scene()
+    stream_scene = deck.new_key_scene()
     intro = deck.new_video_scene(
         os.path.join(ASSETS_PATH, "intro.mpg"),
         on_finish=lambda: deck.change_scene(scene1),
     )
     obs = OBS(password=os.getenv("OBS_PASSWORD"))
 
-    Key = partial(IconKey, base_path=ASSETS_PATH)
     scene1.add(
         (0, 0),
         zoom.StartMeetingKey(
@@ -52,70 +54,106 @@ def run(deck: Deck):
 
     scene1.add(
         (1, 0),
-        TwitchKey(text="Stream",
-                  profile_dir="/home/mrdon/.config/google-chrome",
-                  actions=[
-                      Command("gtk-launch", "obs-twitch"),
-                      twitch.OpenChat(channel="mrdonbrown", hide_header=True),
-                      MoveWindow("Twitch - Google Chrome", "12000", 0, 100, 100),
-                      MaximizeWindow("Twitch - Google Chrome"),
-                      Pause(5),
-                      SendHotkey(By.title("Twitch - Google Chrome"), "f11"),
-                      obs.change_scene("Coding - Webcam"),
-                  ]),
+        IconKey(
+            os.path.join(dirname(__file__), "sleuthdeck", "plugins", "twitch", "assets", "twitch-logo.png"),
+            text="Stream",
+            actions=[ChangeScene(stream_scene)]
+        ),
+    )
+
+    sleep_toggle = Toggle(
+            on_enable=DeckBrightness(5),
+            on_disable=DeckBrightness(70),
+        )
+    scene1.add(
+        (2, 3),
+        FontAwesomeKey(name="regular/moon", tint="blue", actions=[sleep_toggle]),
     )
 
     scene1.add(
-        (1, 1),
+        (2, 4),
+        FontAwesomeKey(name="regular/lightbulb", enabled=True, actions=[Toggle(
+            on_enable=Sequential(
+                Command("/home/mrdon/dev/twitch/lights/on.sh"),
+                lambda *args: sleep_toggle(*args)
+            ),
+            on_disable=Sequential(
+                Command("/home/mrdon/dev/twitch/lights/off.sh"),
+                lambda *args: sleep_toggle(*args)
+            ),
+            initial=True)
+        ]),
+    )
+
+
+    stream_scene.add(
+        (0, 0),
         OBSKey(text="Webcam", actions=[obs.change_scene("Coding - Webcam")]),
     )
-    scene1.add(
-        (1, 2),
+    stream_scene.add(
+        (0, 1),
         OBSKey(text="Pycharm", actions=[obs.change_scene("Coding - Pycharm")]),
     )
-    scene1.add(
-        (1, 3),
+    stream_scene.add(
+        (0, 2),
         OBSKey(text="Firefox", actions=[obs.change_scene("Coding - Firefox")]),
     )
-    scene1.add(
-        (1, 4),
+    stream_scene.add(
+        (0, 3),
+        OBSKey(text="Terminal", actions=[obs.change_scene("Coding - Terminal")]),
+    )
+    stream_scene.add(
+        (0, 4),
         OBSKey(text="Gopro", actions=[obs.change_scene("Coding - Gopro")]),
     )
-    scene1.add(
+    stream_scene.add(
+        (1, 0),
+        OBSKey(text="BRB", actions=[obs.change_scene("Coding - Be right back")]),
+    )
+    stream_scene.add(
         (2, 0),
-        Key(
-            "Elephant_Walking_animated.gif",
-            text="Rimshot",
-            actions=[sound.Play("/home/mrdon/dev/twitch/sounds/rimshot.mp3", gain=-13)],
-        ),
+        FontAwesomeKey("regular/face-grimace",
+                       text="Rimshot",
+                       actions=[sound.Play("/home/mrdon/dev/twitch/sounds/rimshot.mp3", gain=-13)],
+                       ),
     )
-    scene1.add(
+    stream_scene.add(
         (2, 1),
-        OBSKey(text="Overlays", actions=[obs.toggle_source("Chat message callout", False, scene="[Scene] Overlay - Full"),
-                                         Pause(.3),
-                                         obs.toggle_source("Section title", True, scene="[Scene] Overlay - Full"),
-                                         obs.toggle_source("Section byline", True, scene="[Scene] Overlay - Full")]),
+        OBSKey(text="Overlays",
+               actions=[obs.toggle_source("Chat message callout", False, scene="[Scene] Overlay - Full"),
+                        Pause(.3),
+                        obs.toggle_source("Section title", True, scene="[Scene] Overlay - Full"),
+                        obs.toggle_source("Section byline", True, scene="[Scene] Overlay - Full")]),
     )
-    scene1.add(
+    stream_scene.add(
         (2, 2),
         OBSKey(text="Chat", actions=[
             obs.toggle_source("Section title", False, scene="[Scene] Overlay - Full"),
             obs.toggle_source("Section byline", False, scene="[Scene] Overlay - Full"),
             Pause(.3),
             obs.toggle_source("Chat message callout", True, scene="[Scene] Overlay - Full"),
-                                         ]),
+        ]),
     )
-
-    scene1.add(
+    stream_scene.add(
         (2, 3),
-        OBSKey(text="Sleep", actions=[ToggleSleep()]),
+        TwitchKey(text="Start",
+                  profile_dir="/home/mrdon/.config/google-chrome",
+                  actions=[
+                      Command("gtk-launch", "obs-twitch"),
+                      twitch.OpenChat(channel="mrdonbrown", hide_header=True),
+                      MoveWindow("Twitch - Google Chrome", "6000", 0, 100, 100),
+                      MaximizeWindow("Twitch - Google Chrome"),
+                      Pause(5),
+                      SendHotkey(By.title("Twitch - Google Chrome"), "f11"),
+                      obs.change_scene("Coding - Webcam"),
+                      ChangeScene(stream_scene)
+                  ]),
     )
-
-    scene1.add(
+    stream_scene.add(
         (2, 4),
-        FontAwesomeKey(name="regular/lightbulb", actions=[Toggle(
-            on_enable=Command("/home/mrdon/dev/twitch/lights/on.sh"),
-            on_disable=Command("/home/mrdon/dev/twitch/lights/off.sh"))]),
+        FontAwesomeKey("regular/circle-stop",
+                       text="Exit",
+                       actions=[PreviousScene()])
     )
 
     # scene1.set_key(0, sleuth.RepoLockKey(project="sleuth", deployment="application"))

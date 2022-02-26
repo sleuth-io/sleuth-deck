@@ -117,10 +117,10 @@ class IconKey(Key):
 
 class FontAwesomeKey(IconKey):
 
-    def __init__(self, name: str, text: Optional[str] = None, actions: List[Action] = None, tint: str = "white"):
+    def __init__(self, name: str, text: Optional[str] = None, actions: List[Action] = None, tint: str = "white", enabled: bool = False):
         super().__init__(path.join(dirname(__file__), "../assets/fontawesome-free-6.0.0-desktop/svgs",
                                    f"{name}.svg"), text, actions)
-        self._image_loader = partial(self._image_loader, tint=tint)
+        self._image_loader = partial(self._image_loader, tint=tint, enabled=enabled)
 
 
 async def detect_windows_toggle(

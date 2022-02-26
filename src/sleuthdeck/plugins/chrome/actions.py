@@ -44,5 +44,5 @@ class OpenWebsite(Action):
     def __init__(self, url: str):
         self._url = url
 
-    def execute(self, scene: KeyScene, key: Key, click: ClickType):
+    def __call__(self, scene: KeyScene, key: Key, click: ClickType):
         key.driver.get(self._url)

@@ -12,5 +12,5 @@ class Play(Action):
         sound += gain
         self._sound = sound
 
-    def execute(self, scene: KeyScene, key: Key, click: ClickType):
+    def __call__(self, scene: KeyScene, key: Key, click: ClickType):
         play(self._sound)

@@ -33,7 +33,7 @@ class ClickType(Enum):
 
 
 class Action:
-    def execute(self, scene: KeyScene, key: Key, click: ClickType):
+    def __call__(self, scene: KeyScene, key: Key, click: ClickType):
         pass
 
 
@@ -199,7 +199,7 @@ class KeyScene(Scene):
         for action in actions:
             try:
                 print(f"Running {action.__class__.__name__}")
-                action.execute(self, key, click)
+                action(self, key, click)
             except Exception as e:
                 print(f"Error running action {action}: {e}")
                 traceback.print_exc()

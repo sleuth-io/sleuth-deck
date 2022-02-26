@@ -73,8 +73,8 @@ class EndMeeting(SendHotkey):
     def __init__(self):
         super().__init__("Zoom Meeting", "alt", "q")
 
-    def execute(self, scene: KeyScene, key: Key, click: ClickType):
-        super().execute(scene, key, click)
+    def __call__(self, scene: KeyScene, key: Key, click: ClickType):
+        super().__call__(scene, key, click)
         w = get_window("Zoom Meeting")
         if w:
             w.focus()

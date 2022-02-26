@@ -16,29 +16,39 @@ from sleuthdeck.keys import IconKey
 from sleuthdeck.windows import get_window, By
 
 
+class Sequential(Action):
+    def __init__(self, *actions: Action) -> None:
+        super().__init__()
+        self._actions = actions
+
+    def __call__(self, scene: KeyScene, key: Key, click: ClickType):
+        for action in self._actions:
+            action(scene, key, click)
+
+
 class Command(Action):
     def __init__(self, command: str, *args: str):
         self.command = command
         self.args = args
 
-    def execute(self, scene: KeyScene, key: Key, click: ClickType):
+    def __call__(self, scene: KeyScene, key: Key, click: ClickType):
         print(f"Running {self.command} {' '.join(self.args)}")
         subprocess.run([self.command] + list(self.args))
 
 
 class Toggle(Action):
-    def __init__(self, on_enable: Command, on_disable: Command, initial: bool = False) -> None:
+    def __init__(self, on_enable: Action, on_disable: Action, initial: bool = False) -> None:
         self._on_enable = on_enable
         self._on_disable = on_disable
         self._state = initial
 
-    def execute(self, scene: KeyScene, key: IconKey, click: ClickType):
+    def __call__(self, scene: KeyScene, key: IconKey, click: ClickType):
         if self._state:
-            self._on_disable.execute(scene, key, click)
+            self._on_disable(scene, key, click)
             key.update_icon(enabled=False)
             self._state = False
         else:
-            self._on_enable.execute(scene, key, click)
+            self._on_enable(scene, key, click)
             key.update_icon(enabled=True)
             self._state = True
 
@@ -47,17 +57,17 @@ class ChangeScene(Action):
     def __init__(self, scene: Scene):
         self.scene = scene
 
-    def execute(self, scene: KeyScene, key: Key, click: ClickType):
+    def __call__(self, scene: KeyScene, key: Key, click: ClickType):
         scene.deck.change_scene(self.scene)
 
 
 class PreviousScene(Action):
-    def execute(self, scene: KeyScene, key: Key, click: ClickType):
+    def __call__(self, scene: KeyScene, key: Key, click: ClickType):
         scene.deck.previous_scene()
 
 
 class Close(Action):
-    def execute(self, scene: KeyScene, key: Key, click: ClickType):
+    def __call__(self, scene: KeyScene, key: Key, click: ClickType):
         scene.deck.close()
         signal.raise_signal(signal.SIGINT)
 
@@ -66,7 +76,7 @@ class MaximizeWindow(Action):
     def __init__(self, title: Union[str, By]):
         self.title = title
 
-    def execute(self, scene: KeyScene, key: Key, click: ClickType):
+    def __call__(self, scene: KeyScene, key: Key, click: ClickType):
         window = get_window(self.title, attempts=5 * 10)
         if window:
             window.maximize()
@@ -78,7 +88,7 @@ class UnMaximizeWindow(Action):
     def __init__(self, title: Union[str, By]):
         self.title = title
 
-    def execute(self, scene: KeyScene, key: Key, click: ClickType):
+    def __call__(self, scene: KeyScene, key: Key, click: ClickType):
         window = get_window(self.title, attempts=5 * 10)
         if window:
             window.unmaximize()
@@ -90,7 +100,7 @@ class Pause(Action):
     def __init__(self, seconds: Union[float, int]):
         self.seconds = seconds
 
-    def execute(self, scene: KeyScene, key: Key, click: ClickType):
+    def __call__(self, scene: KeyScene, key: Key, click: ClickType):
         sleep(self.seconds)
 
 
@@ -99,7 +109,7 @@ class CloseWindow(Action):
         self.title = title
         self._wait = wait
 
-    def execute(self, scene: KeyScene, key: Key, click: ClickType):
+    def __call__(self, scene: KeyScene, key: Key, click: ClickType):
         window = get_window(self.title, attempts=self._wait * 10)
         if window:
             window.close()
@@ -115,7 +125,7 @@ class MoveWindow(Action):
         self.height = height
         self.title = title
 
-    def execute(self, scene: KeyScene, key: Key, click: ClickType):
+    def __call__(self, scene: KeyScene, key: Key, click: ClickType):
         window = get_window(self.title, attempts=5 * 10)
         if window:
             window.move(self.x, self.y, self.width, self.height)
@@ -128,7 +138,7 @@ class SendHotkey(Action):
         self.title = title
         self.hotkey = hotkey
 
-    def execute(self, scene: KeyScene, key: Key, click: ClickType):
+    def __call__(self, scene: KeyScene, key: Key, click: ClickType):
         print("sending key")
         window = get_window(self.title, attempts=5 * 10)
         print("got window")
@@ -137,14 +147,9 @@ class SendHotkey(Action):
         print("sent")
 
 
-class ToggleSleep(Action):
-    def __init__(self) -> None:
-        self._sleep = False
+class DeckBrightness(Action):
+    def __init__(self, value: int) -> None:
+        self._value = value
 
-    def execute(self, scene: KeyScene, key: IconKey, click: ClickType):
-        if self._sleep:
-            scene.deck.stream_deck.set_brightness(5)
-            self._sleep = False
-        else:
-            scene.deck.stream_deck.set_brightness(70)
-            self._sleep = True
+    def __call__(self, scene: KeyScene, key: IconKey, click: ClickType):
+        scene.deck.stream_deck.set_brightness(self._value)
