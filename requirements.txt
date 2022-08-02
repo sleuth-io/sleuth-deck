@@ -4,7 +4,7 @@
 #
 #    pip-compile
 #
-aspy.refactor-imports==2.2.0
+aspy-refactor-imports==2.2.0
     # via reorder-python-imports
 async-generator==1.10
     # via
@@ -18,7 +18,7 @@ attrs==21.4.0
 black==21.12b0
     # via -r requirements.in
 cached-property==1.5.2
-    # via aspy.refactor-imports
+    # via aspy-refactor-imports
 cairocffi==1.3.0
     # via cairosvg
 cairosvg==2.5.2
@@ -52,10 +52,10 @@ mouseinfo==0.1.3
 mypy-extensions==0.4.3
     # via black
 numpy==1.22.1
-    # via opencv-python
+    # via opencv-python-headless
 obs-websocket-py==0.5.3
     # via -r requirements.in
-opencv-python==4.5.5.62
+opencv-python-headless==4.6.0.66
     # via -r requirements.in
 outcome==1.1.0
     # via trio

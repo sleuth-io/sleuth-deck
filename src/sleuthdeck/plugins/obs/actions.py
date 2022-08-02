@@ -1,17 +1,21 @@
 from os import path
 from os.path import dirname
+from time import sleep
 from typing import Any
 from typing import List
 from typing import Optional
 
 from obswebsocket import obsws
 from obswebsocket import requests
+from obswebsocket.base_classes import Baserequests
 from websocket import WebSocketConnectionClosedException
 
+from sleuthdeck.actions import SendHotkey
 from sleuthdeck.deck import Action
 from sleuthdeck.deck import ClickType
 from sleuthdeck.deck import KeyScene
 from sleuthdeck.keys import IconKey
+from sleuthdeck.windows import get_window, By
 
 
 class OBS:
@@ -25,6 +29,9 @@ class OBS:
 
     def change_scene(self, name: str):
         return ChangeScene(self, name)
+
+    def close(self):
+        return Close(self)
 
     def toggle_source(self, name: str, show: bool = True, scene: Optional[str] = None):
         return ToggleSource(self, name, show, scene=scene)
@@ -60,6 +67,20 @@ class OBSKey(IconKey):
         )
 
 
+class Close(Action):
+    def __init__(self, obs: OBS):
+        self.obs = obs
+
+    def __call__(self, scene: KeyScene, key: OBSKey, click: ClickType):
+        window = get_window(By.window_class("obs.obs"), attempts=1)
+        if window:
+            self.obs.obs(StopVirtualCam())
+            sleep(.5)
+            window.close()
+            get_window(By.window_class("obs.obs"), attempts=1)
+            sleep(.5)
+
+
 class ChangeScene(Action):
     def __init__(self, obs: OBS, name: str):
         self.name = name
@@ -78,3 +99,14 @@ class ToggleSource(Action):
 
     def __call__(self, scene: KeyScene, key: OBSKey, click: ClickType):
         self.obs.obs(requests.SetSceneItemRender(self.name, self._show, scene_name=self.scene))
+
+
+class StopVirtualCam(Baserequests):
+    """Stop recording.
+Will return an `error` if recording is not active.
+
+    """
+
+    def __init__(self):
+        Baserequests.__init__(self)
+        self.name = 'StopVirtualCam'

@@ -1,5 +1,5 @@
 streamdeck
-opencv-python
+opencv-python-headless
 Pillow
 psutil
 pydub

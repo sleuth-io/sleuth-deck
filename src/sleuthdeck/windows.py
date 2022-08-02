@@ -54,7 +54,6 @@ class Window:
     def focus(self):
         shell.run("wmctrl", "-ia", self.window_id)
 
-
     def __repr__(self):
         return f"Window (id='{self.window_id}', class='{self.window_class}', title='{self.title}')"
 
@@ -88,16 +87,19 @@ def _parse_window_output(output):
     return result
 
 
-def get_window(selector: Union[str, By], attempts: int = 1) -> Optional[Window]:
+def get_window(selector: Union[str, By], attempts: int = 2) -> Optional[Window]:
+    windows = []
     if isinstance(selector, str):
         actual_selector = By.title(selector)
     else:
         actual_selector = selector
     for attempt in range(attempts):
-        for window in get_windows():
+        print(f"attempt {attempt}")
+        windows = get_windows()
+        for window in windows:
             if actual_selector(window):
                 return window
         time.sleep(0.1)
 
-    print(f"No windows found for {actual_selector}: {get_windows()}")
+    print(f"No windows found for {actual_selector}: {windows}")
     return None

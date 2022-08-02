@@ -1,11 +1,12 @@
 from __future__ import annotations
+
+import os
 import signal
 import subprocess
 from time import sleep
 from typing import Optional, Union, Tuple
 
 from PIL.Image import Image
-from pyautogui import hotkey
 
 from sleuthdeck.deck import Action
 from sleuthdeck.deck import ClickType
@@ -112,7 +113,9 @@ class CloseWindow(Action):
     def __call__(self, scene: KeyScene, key: Key, click: ClickType):
         window = get_window(self.title, attempts=self._wait * 10)
         if window:
+            print(f"Closing window {self.title}")
             window.close()
+            print(f"Closed window {self.title}")
         else:
             print(f"No window found with {self.title}")
 
@@ -141,8 +144,13 @@ class SendHotkey(Action):
     def __call__(self, scene: KeyScene, key: Key, click: ClickType):
         print("sending key")
         window = get_window(self.title, attempts=5 * 10)
-        print("got window")
+        if not window:
+            print(f"No window found for {self.title}")
+            return
+        print(f"got window {self.title}")
         window.focus()
+        sleep(.1)
+        from pyautogui import hotkey
         hotkey(*self.hotkey)
         print("sent")
 

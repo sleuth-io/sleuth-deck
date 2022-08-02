@@ -22,6 +22,7 @@ def run(deck: Deck):
     deck.stream_deck.set_brightness(70)
     scene1 = deck.new_key_scene()
     stream_scene = deck.new_key_scene()
+    webinar_scene = deck.new_key_scene()
     intro = deck.new_video_scene(
         os.path.join(ASSETS_PATH, "intro.mpg"),
         on_finish=lambda: deck.change_scene(scene1),
@@ -33,23 +34,52 @@ def run(deck: Deck):
         zoom.StartMeetingKey(
             text="OM",
             actions=[
-                CloseWindow(By.window_class("obs.obs"), wait=0),
+                obs.close(),
                 Command("gtk-launch", "obs-zoom"),
                 zoom.StartMeeting("https://sleuth-io.zoom.us/j/82836110226"),
                 Pause(2),
                 UnMaximizeWindow("Zoom Meeting"),
                 MoveWindow("Zoom Meeting", "6000", 0, 100, 100),
                 MaximizeWindow("Zoom Meeting"),
-                Pause(1),
+                Pause(3),
                 SendHotkey("Zoom Meeting", "alt", "v"),
             ],
             close_actions=[
                 zoom.EndMeeting(),
-                CloseWindow(By.window_class("obs.obs")),
-                SendHotkey(By.title("Exit OBS?"), "tab"),
-                SendHotkey(By.title("Exit OBS?"), "enter")
+                obs.close()
+
             ]
         ),
+    )
+
+    scene1.add(
+        (0, 1),
+        zoom.StartMeetingKey(
+            text="Zoom",
+            actions=[
+                obs.close(),
+                Command("gtk-launch", "obs-zoom"),
+                UnMaximizeWindow("Zoom Meeting"),
+                MoveWindow("Zoom Meeting", "6000", 0, 100, 100),
+                MaximizeWindow("Zoom Meeting"),
+                Pause(3),
+                SendHotkey("Zoom Meeting", "alt", "v"),
+            ],
+            close_actions=[
+                zoom.EndMeeting(),
+                obs.close()
+
+            ]
+        ),
+    )
+
+    scene1.add(
+        (0, 3),
+        OBSKey(text="Forward", actions=[obs.change_scene("Camera only (zoomed)")]),
+    )
+    scene1.add(
+        (0, 4),
+        OBSKey(text="Leaned", actions=[obs.change_scene("Camera only (leaned back)")]),
     )
 
     scene1.add(
@@ -60,6 +90,23 @@ def run(deck: Deck):
             actions=[ChangeScene(stream_scene)]
         ),
     )
+
+    scene1.add(
+        (1, 2),
+        IconKey(
+            os.path.join(dirname(__file__), "sleuthdeck", "plugins", "twitch", "assets", "twitch-logo.png"),
+            text="Webinar",
+            actions=[ChangeScene(webinar_scene)]
+        ),
+    )
+
+    scene1.add(
+        (2, 0),
+        FontAwesomeKey(name="regular/file-audio", tint="green", actions=[
+            SendHotkey("Spotify", "space"),
+        ]),
+    )
+
 
     sleep_toggle = Toggle(
             on_enable=DeckBrightness(5),
@@ -85,11 +132,57 @@ def run(deck: Deck):
         ]),
     )
 
+    webinar_scene.add(
+        (0, 0),
+        OBSKey(text="Intro", actions=[obs.change_scene("Starting soon")]),
+    )
+    webinar_scene.add(
+        (0, 1),
+        OBSKey(text="Logo", actions=[obs.change_scene("Intro video")]),
+    )
+
+
+    webinar_scene.add(
+        (1, 0),
+        OBSKey(text="Host", actions=[obs.change_scene("Me full")]),
+    )
+
+    webinar_scene.add(
+        (1, 1),
+        OBSKey(text="Both", actions=[obs.change_scene("Me and Daniel")]),
+    )
+
+    webinar_scene.add(
+        (1, 2),
+        OBSKey(text="Guest", actions=[obs.change_scene("Daniel full")]),
+    )
+
+    webinar_scene.add(
+        (1, 3),
+        OBSKey(text="Share", actions=[obs.change_scene("Daniel screenshare")]),
+    )
+    webinar_scene.add(
+        (2, 0),
+        OBSKey(text="End", actions=[obs.change_scene("Ending")]),
+    )
+
+    webinar_scene.add(
+        (2, 4),
+        FontAwesomeKey("regular/circle-stop",
+                       text="Exit",
+                       actions=[ChangeScene(scene1)])
+    )
+
+
 
     stream_scene.add(
         (0, 0),
         OBSKey(text="Webcam", actions=[obs.change_scene("Coding - Webcam")]),
     )
+    # stream_scene.add(
+    #     (0, 1),
+    #     OBSKey(text="Side PC", actions=[obs.change_scene("Coding - Side PC")]),
+    # )
     stream_scene.add(
         (0, 1),
         OBSKey(text="Pycharm", actions=[obs.change_scene("Coding - Pycharm")]),
@@ -139,12 +232,13 @@ def run(deck: Deck):
         TwitchKey(text="Start",
                   profile_dir="/home/mrdon/.config/google-chrome",
                   actions=[
+                      obs.close(),
                       Command("gtk-launch", "obs-twitch"),
                       twitch.OpenChat(channel="mrdonbrown", hide_header=True),
-                      MoveWindow("Twitch - Google Chrome", "6000", 0, 100, 100),
-                      MaximizeWindow("Twitch - Google Chrome"),
+                      MoveWindow("mrdondown - Chat - Twitch", "6000", 0, 100, 100),
+                      MaximizeWindow("mrdondown - Chat - Twitch"),
                       Pause(5),
-                      SendHotkey(By.title("Twitch - Google Chrome"), "f11"),
+                      SendHotkey(By.title("mrdondown - Chat - Twitch"), "f11"),
                       obs.change_scene("Coding - Webcam"),
                       ChangeScene(stream_scene)
                   ]),
@@ -153,7 +247,7 @@ def run(deck: Deck):
         (2, 4),
         FontAwesomeKey("regular/circle-stop",
                        text="Exit",
-                       actions=[PreviousScene()])
+                       actions=[ChangeScene(scene1)])
     )
 
     # scene1.set_key(0, sleuth.RepoLockKey(project="sleuth", deployment="application"))

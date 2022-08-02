@@ -6,8 +6,6 @@ from typing import List
 from typing import Optional
 from urllib.parse import urlparse
 
-from pyautogui import press
-
 from sleuthdeck.actions import Command
 from sleuthdeck.actions import SendHotkey
 from sleuthdeck.deck import Action, Key, ClickType
@@ -80,7 +78,9 @@ class EndMeeting(SendHotkey):
             w.focus()
             sleep(.5)
             print("pressing enter")
+            from pyautogui import press
             press("enter")
+            print("pressed enter")
 
 
 
