@@ -14,7 +14,7 @@ from sleuthdeck.deck import Key
 from sleuthdeck.deck import KeyScene
 from sleuthdeck.deck import Scene
 from sleuthdeck.keys import IconKey
-from sleuthdeck.windows import get_window, By
+from sleuthdeck.windows import get_window, By, get_windows, get_focused_window
 
 
 class Sequential(Action):
@@ -143,16 +143,18 @@ class SendHotkey(Action):
 
     def __call__(self, scene: KeyScene, key: Key, click: ClickType):
         print("sending key")
+        focused_window = get_focused_window()
+
         window = get_window(self.title, attempts=5 * 10)
         if not window:
             print(f"No window found for {self.title}")
             return
         print(f"got window {self.title}")
         window.focus()
-        sleep(.1)
         from pyautogui import hotkey
         hotkey(*self.hotkey)
         print("sent")
+        focused_window.focus()
 
 
 class DeckBrightness(Action):

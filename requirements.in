@@ -9,6 +9,14 @@ watchdog
 pyautogui
 cairosvg
 
+elgato
+
+# presentation deps
+pyyaml
+#pytz
+#python-dateutil
+python-slugify
+
 pytest
 black
 reorder-python-imports

@@ -1,0 +1,27 @@
+title: "What are DORA metrics good for?"
+guest:
+  name: Dylan
+  title: CEO/Co-founder
+sections:
+  - title: Welcome!
+    byline: "Question of the day - How often do you release?"
+  - title: "What are DORA metrics good for?"
+    byline: "... and it isn't 'absolutely nothing' (!)"
+  - title: "Quick recap: What are DORA metrics?"
+    byline: "Key metrics that correlate with high performing teams"
+  - title: "What can they be used for?"
+    byline: "Which of these apply to your team?"
+  - title: "1. Assessment"
+    byline: Where does your team fit in the industry?
+  - title: "2. Measure progress on an initiative"
+    byline: Baseline, make a change, measure again
+  - title: "3. Track the impact of an unrelated change"
+    byline: Verify delivery performance is unaffected or even improved
+  - title: "4. Track impact of team scale events"
+    byline: As you add people, how is your delivery performance impacted?
+  - title: "Are DORA metrics just for 'bad' teams?"
+    byline: "Surprise answer: no :)"
+  - title: "Final thoughts"
+    byline: "Change happens, so know the impact of that change"
+  - title: "Second opinion"
+    byline: "Let's hear from Dylan Etkin, my co-founder"

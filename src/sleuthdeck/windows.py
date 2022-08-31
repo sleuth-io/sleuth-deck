@@ -53,6 +53,12 @@ class Window:
 
     def focus(self):
         shell.run("wmctrl", "-ia", self.window_id)
+        for _ in range(10):
+            focused = get_focused_window()
+            if focused.window_id == self.window_id:
+                return
+        else:
+            print("Unable to focus window")
 
     def __repr__(self):
         return f"Window (id='{self.window_id}', class='{self.window_class}', title='{self.title}')"
@@ -85,6 +91,11 @@ def _parse_window_output(output):
             )
         )
     return result
+
+
+def get_focused_window() -> Window:
+    window_name = shell.run("xdotool", "getwindowfocus", "getwindowname").strip()
+    return get_window(By.title(window_name), attempts=1)
 
 
 def get_window(selector: Union[str, By], attempts: int = 2) -> Optional[Window]:

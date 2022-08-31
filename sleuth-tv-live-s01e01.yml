@@ -1,0 +1,24 @@
+title: "DORA Metrics 101"
+sections:
+  - title: Welcome!
+    byline: Let's make this interactive - chat welcome!
+  - title: "DORA Metrics 101"
+    byline: "The 'why' and 'what'"
+  - title: "Q: How do the best teams work?"
+    byline: "To understand the answer, you need to know the question"
+  - title: "(Short) History of DORA"
+    byline: How DORA and the State of DevOps intertwine
+  - title: "What are the DORA metrics?"
+    byline: Hard to do remotely, but possible
+  - title: "1. Deployment frequency"
+    byline: How often you change production
+  - title: "2. Change lead time"
+    byline: How quickly a change gets to production
+  - title: "3. Change failure rate"
+    byline: How often changes fail
+  - title: "4. Mean time to recover (MTTR)"
+    byline: How long failure lasts
+  - title: "How to measure?"
+    byline: Well, Sleuth of course! ... but how does that work?
+  - title: "Final thoughts"
+    byline: "Elephant in the room: How can/should you use this?"

@@ -12,6 +12,7 @@ from sleuthdeck.plugins import sound
 from sleuthdeck.plugins import twitch
 from sleuthdeck.plugins import zoom
 from sleuthdeck.plugins.obs.actions import OBSKey, OBS
+from sleuthdeck.plugins.presentation.actions import Presentation
 from sleuthdeck.plugins.twitch.actions import TwitchKey
 from sleuthdeck.windows import By
 
@@ -28,6 +29,11 @@ def run(deck: Deck):
         on_finish=lambda: deck.change_scene(scene1),
     )
     obs = OBS(password=os.getenv("OBS_PASSWORD"))
+    presso = Presentation(obs, "../sleuth-tv-live.yml",
+                          title_scene_item="Title",
+                          byline_scene_item="Byline",
+                          title_scene="Me full (title)",
+                          overlay_scene="[Scene] Lower-third")
 
     scene1.add(
         (0, 0),
@@ -101,17 +107,21 @@ def run(deck: Deck):
     )
 
     scene1.add(
+        (1, 4),
+        FontAwesomeKey("solid/camera", text="Section", actions=[Command("flameshot", "gui")]),
+    )
+
+    scene1.add(
         (2, 0),
         FontAwesomeKey(name="regular/file-audio", tint="green", actions=[
             SendHotkey("Spotify", "space"),
         ]),
     )
 
-
     sleep_toggle = Toggle(
-            on_enable=DeckBrightness(5),
-            on_disable=DeckBrightness(70),
-        )
+        on_enable=DeckBrightness(5),
+        on_disable=DeckBrightness(70),
+    )
     scene1.add(
         (2, 3),
         FontAwesomeKey(name="regular/moon", tint="blue", actions=[sleep_toggle]),
@@ -141,6 +151,38 @@ def run(deck: Deck):
         OBSKey(text="Logo", actions=[obs.change_scene("Intro video")]),
     )
 
+    webinar_scene.add(
+        (0, 2),
+        FontAwesomeKey("regular/flag", text="Reset", actions=[presso.reset()]),
+    )
+    webinar_scene.add(
+        (0, 3),
+        FontAwesomeKey("solid/arrow-left", text="Prev", actions=[presso.previous_section(),
+                                                                 Pause(3),
+                                                                 obs.change_scene("Me full")]),
+    )
+    webinar_scene.add(
+        (0, 4),
+        FontAwesomeKey("solid/arrow-right", text="Next", actions=[presso.next_section(),
+                                                                  Pause(3),
+                                                                  obs.change_scene("Me full")]),
+    )
+
+    webinar_scene.add(
+        (2, 3),
+        TwitchKey(text="Start",
+                  profile_dir="/home/mrdon/.config/google-chrome",
+                  actions=[
+                      obs.close(),
+                      Command("gtk-launch", "obs-webinar"),
+                      Command("gtk-launch", "chromium https://www.youtube.com/live_chat?is_popout=1&v=i-Lz4bhUNO8"),
+                      MoveWindow(By.window_class("chromium.Chromium"), "6000", 0, 100, 100),
+                      MaximizeWindow(By.window_class("chromium.Chromium"), ),
+                      Pause(5),
+                      SendHotkey(By.window_class("chromium.Chromium"), "f11"),
+                      obs.change_scene("Starting soon"),
+                  ]),
+    )
 
     webinar_scene.add(
         (1, 0),
@@ -149,17 +191,53 @@ def run(deck: Deck):
 
     webinar_scene.add(
         (1, 1),
-        OBSKey(text="Both", actions=[obs.change_scene("Me and Daniel")]),
+        OBSKey(text="Share", actions=[obs.change_scene("Me screenshare")]),
     )
 
     webinar_scene.add(
         (1, 2),
-        OBSKey(text="Guest", actions=[obs.change_scene("Daniel full")]),
+        OBSKey(text="Chat", actions=[obs.toggle_source("Title", False, "[Scene] Lower-third"),
+                                     obs.toggle_source("Byline", False, "[Scene] Lower-third"),
+                                     obs.toggle_source("Chat highlight", True, "[Scene] Lower-third"),
+                                     ]),
+    )
+    webinar_scene.add(
+        (1, 3),
+        OBSKey(text="Section", actions=[
+            obs.toggle_source("Chat highlight", False, "[Scene] Lower-third"),
+            obs.toggle_source("Title", True, "[Scene] Lower-third"),
+            obs.toggle_source("Byline", True, "[Scene] Lower-third"),
+
+        ]),
+    )
+    webinar_scene.add(
+        (1, 4),
+        FontAwesomeKey("solid/camera", text="T Cam", actions=[obs.toggle_source("[Scene] Me corner (shadowed)"),
+                                              ]),
     )
 
     webinar_scene.add(
-        (1, 3),
-        OBSKey(text="Share", actions=[obs.change_scene("Daniel screenshare")]),
+        (2, 0),
+        OBSKey(text="Both", actions=[obs.change_scene("Me and Guest")]),
+    )
+
+    # webinar_scene.add(
+    #     (2, 1),
+    #     OBSKey(text="Guest", actions=[obs.change_scene("Guest full")]),
+    # )
+    #
+    # webinar_scene.add(
+    #     (2, 2),
+    #     OBSKey(text="Share", actions=[obs.change_scene("Guest screenshare")]),
+    # )
+    webinar_scene.add(
+        (2, 1),
+        OBSKey(text="Commercial", actions=[obs.change_scene("Commercial")]),
+    )
+
+    webinar_scene.add(
+        (2, 2),
+        OBSKey(text="News", actions=[obs.change_scene("News")]),
     )
     webinar_scene.add(
         (2, 0),
@@ -172,8 +250,6 @@ def run(deck: Deck):
                        text="Exit",
                        actions=[ChangeScene(scene1)])
     )
-
-
 
     stream_scene.add(
         (0, 0),

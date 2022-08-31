@@ -33,7 +33,7 @@ class OBS:
     def close(self):
         return Close(self)
 
-    def toggle_source(self, name: str, show: bool = True, scene: Optional[str] = None):
+    def toggle_source(self, name: str, show: bool = None, scene: Optional[str] = None):
         return ToggleSource(self, name, show, scene=scene)
 
     def _ensure_connected(self):
@@ -91,14 +91,21 @@ class ChangeScene(Action):
 
 
 class ToggleSource(Action):
-    def __init__(self, obs: OBS, name: str, show: bool = True, scene = None):
+    def __init__(self, obs: OBS, name: str, show: bool = None, scene = None):
         self.name = name
         self.obs = obs
         self.scene = scene
         self._show = show
 
     def __call__(self, scene: KeyScene, key: OBSKey, click: ClickType):
-        self.obs.obs(requests.SetSceneItemRender(self.name, self._show, scene_name=self.scene))
+        if self._show is None:
+            visible = not self.obs.obs(requests.GetSceneItemProperties(self.name)).getVisible()
+        else:
+            visible = self._show
+
+        print(f"Making {visible}")
+
+        self.obs.obs(requests.SetSceneItemRender(self.name, visible, scene_name=self.scene))
 
 
 class StopVirtualCam(Baserequests):
