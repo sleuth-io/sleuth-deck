@@ -35,33 +35,40 @@ class Presentation:
                  title_scene="Title", overlay_scene="Overlay",
                  guest_name_item="Guest 1",
                  guest_title_item="Guest 2"):
-        with open(path, "r") as stream:
-            try:
-                data = yaml.safe_load(stream)
-            except yaml.YAMLError as exc:
-                print(exc)
-                self.event = Event("Missing", [])
-                return
-
-        sections = []
-        if "sections" in data:
-            sections = [Section(title=s["title"], byline=s["byline"]) for s in data["sections"]]
-
-        if "guest" in data:
-            obs.obs(requests.SetTextFreetype2Properties(guest_name_item, text=data["guest"]["name"]))
-            obs.obs(requests.SetTextFreetype2Properties(guest_title_item, text=data["guest"]["title"]))
-
-        self.event = Event(
-            title=data["title"],
-            sections=sections,
-        )
+        self.path = path
         self.obs = obs
+        self.guest_name_item = guest_name_item
+        self.guest_title_item = guest_title_item
+
+        self._reload()
+        if not self.event.sections:
+            return
+
         self.current_section_idx = 0
         self.title_scene_item = title_scene_item
         self.byline_scene_item = byline_scene_item
         self.title_scene = title_scene
         self.overlay_scene = overlay_scene
-        self.reset()
+
+    def _reload(self):
+        with open(self.path, "r") as stream:
+            try:
+                data = yaml.safe_load(stream)
+            except yaml.YAMLError as exc:
+                print(exc)
+                self.event = Event("Missing", [])
+        sections = []
+        if "sections" in data:
+            sections = [Section(title=s["title"], byline=s["byline"]) for s in data["sections"]]
+
+        if "guest" in data:
+            self.obs.obs(requests.SetTextFreetype2Properties(self.guest_name_item, text=data["guest"]["name"]))
+            self.obs.obs(requests.SetTextFreetype2Properties(self.guest_title_item, text=data["guest"]["title"]))
+
+        self.event = Event(
+            title=data["title"],
+            sections=sections,
+        )
 
     def next_section(self) -> Action:
         def action(scene: KeyScene, key: Key, click: ClickType):
@@ -69,8 +76,10 @@ class Presentation:
 
         return action
 
-    def reset(self) -> Action:
+    def reset(self, reload: bool = True) -> Action:
         def action(scene: KeyScene, key: Key, click: ClickType):
+            if reload:
+                self._reload()
             self.current_section_idx = 0
             self._update_labels(self.event.sections[0], new_scene=False)
 
@@ -94,7 +103,7 @@ class Presentation:
         self.obs.obs(requests.SetSceneItemRender(self.byline_scene_item, True, self.overlay_scene))
 
     def _next_section(self) -> Section:
-        if len(self.event.sections) == self.current_section_idx:
+        if len(self.event.sections) - 1 == self.current_section_idx:
             self.current_section_idx = 0
         else:
             self.current_section_idx += 1

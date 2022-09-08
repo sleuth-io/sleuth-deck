@@ -1,13 +1,15 @@
-title: "Does failure happen if no one is around to measure it?"
+title: "Should you measure developer productivity?"
 guest:
   name: Dylan
   title: CEO/Co-founder
 sections:
   - title: Welcome!
-    byline: "Fun surprise at the end (!)"
-  - title: "Does failure happen if no one is around to measure it?"
-    byline: "... uh, yes?"
-  - title: "DevOps World 2022 Preview"
-    byline: ""
-  - title: "Up next: Metrics and dev productivity"
-    byline: "How and how NOT To do it"
+    byline: "Ask questions at any time in chat"
+  - title: "Why this is important now"
+    byline: "Things are a-changing"
+  - title: "Introducing Dylan Etkin"
+    byline: "CEO/Co-founder of Sleuth"
+  - title: "Closing thoughts"
+    byline: "Measure teams, not people"
+  - title: "Up next: Does accuracy matter?"
+    byline: "Is the answer 'No!' again?"
