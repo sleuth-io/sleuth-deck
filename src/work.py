@@ -3,7 +3,7 @@ from functools import partial
 from os.path import dirname
 
 from sleuthdeck.actions import MaximizeWindow, Toggle, UnMaximizeWindow, DeckBrightness, Sequential, ChangeScene, \
-    PreviousScene
+    PreviousScene, Wait
 from sleuthdeck.actions import MoveWindow
 from sleuthdeck.actions import SendHotkey, Command, CloseWindow, Pause
 from sleuthdeck.deck import Deck
@@ -33,7 +33,7 @@ def run(deck: Deck):
                           title_scene_item="Title",
                           byline_scene_item="Byline",
                           title_scene="Me full (title)",
-                          overlay_scene="[Scene] Lower-third")
+                          overlay_scene="[Scene] Lower-third (labels)")
 
     scene1.add(
         (0, 0),
@@ -144,7 +144,13 @@ def run(deck: Deck):
 
     webinar_scene.add(
         (0, 0),
-        OBSKey(text="Intro", actions=[obs.change_scene("Starting soon")]),
+        OBSKey(text="Intro", actions=[presso.reset(),
+                                      obs.change_scene("Starting soon"),
+                                      Wait(62),
+                                      obs.start_recording(),
+                                      obs.change_scene("Intro video"),
+                                      Wait(6),
+                                      obs.change_scene("Me full")]),
     )
     webinar_scene.add(
         (0, 1),
@@ -196,24 +202,22 @@ def run(deck: Deck):
 
     webinar_scene.add(
         (1, 2),
-        OBSKey(text="Chat", actions=[obs.toggle_source("Title", False, "[Scene] Lower-third"),
-                                     obs.toggle_source("Byline", False, "[Scene] Lower-third"),
-                                     obs.toggle_source("Chat highlight", True, "[Scene] Lower-third"),
-                                     ]),
-    )
-    webinar_scene.add(
-        (1, 3),
-        OBSKey(text="Section", actions=[
-            obs.toggle_source("Chat highlight", False, "[Scene] Lower-third"),
-            obs.toggle_source("Title", True, "[Scene] Lower-third"),
-            obs.toggle_source("Byline", True, "[Scene] Lower-third"),
+        FontAwesomeKey("brands/rocketchat", text="Chat", actions=[
+            Toggle(on_enable=[obs.toggle_source("Title", False, "[Scene] Lower-third (labels)"),
+                              obs.toggle_source("Byline", False, "[Scene] Lower-third (labels)"),
+                              obs.toggle_source("Chat highlight", True, "[Scene] Lower-third (labels)"),
+                              ],
+                   on_disable=[
+                       obs.toggle_source("Chat highlight", False, "[Scene] Lower-third (labels)"),
+                       obs.toggle_source("Title", True, "[Scene] Lower-third (labels)"),
+                       obs.toggle_source("Byline", True, "[Scene] Lower-third (labels)"),
 
-        ]),
+                   ])])
     )
     webinar_scene.add(
         (1, 4),
         FontAwesomeKey("solid/camera", text="T Cam", actions=[obs.toggle_source("[Scene] Me corner (shadowed)"),
-                                              ]),
+                                                              ]),
     )
 
     webinar_scene.add(
@@ -221,27 +225,29 @@ def run(deck: Deck):
         OBSKey(text="Both", actions=[obs.change_scene("Me and Guest")]),
     )
 
-    # webinar_scene.add(
-    #     (2, 1),
-    #     OBSKey(text="Guest", actions=[obs.change_scene("Guest full")]),
-    # )
-    #
+    webinar_scene.add(
+        (2, 1),
+        OBSKey(text="Guest", actions=[obs.change_scene("Guest full")]),
+    )
+
     # webinar_scene.add(
     #     (2, 2),
     #     OBSKey(text="Share", actions=[obs.change_scene("Guest screenshare")]),
     # )
     webinar_scene.add(
-        (2, 1),
+        (2, 2),
         OBSKey(text="Commercial", actions=[obs.change_scene("Commercial")]),
     )
-
+    #
+    # webinar_scene.add(
+    #     (2, 2),
+    #     OBSKey(text="News", actions=[obs.change_scene("News")]),
+    # )
     webinar_scene.add(
-        (2, 2),
-        OBSKey(text="News", actions=[obs.change_scene("News")]),
-    )
-    webinar_scene.add(
-        (2, 0),
-        OBSKey(text="End", actions=[obs.change_scene("Ending")]),
+        (2, 3),
+        OBSKey(text="End", actions=[obs.change_scene("Ending"),
+                                    Wait(2),
+                                    obs.stop_recording()]),
     )
 
     webinar_scene.add(

@@ -1,13 +1,14 @@
 from os import path
 from os.path import dirname
 from time import sleep
-from typing import Any
+from typing import Any, Callable
 from typing import List
 from typing import Optional
 
 from obswebsocket import obsws
 from obswebsocket import requests
 from obswebsocket.base_classes import Baserequests
+from obswebsocket.requests import StopRecording, StartRecording
 from websocket import WebSocketConnectionClosedException
 
 from sleuthdeck.actions import SendHotkey
@@ -35,6 +36,12 @@ class OBS:
 
     def toggle_source(self, name: str, show: bool = None, scene: Optional[str] = None):
         return ToggleSource(self, name, show, scene=scene)
+
+    def stop_recording(self):
+        return ObsAction(self, lambda obs: obs.obs(StopRecording()))
+
+    def start_recording(self):
+        return ObsAction(self, lambda obs: obs.obs(StartRecording()))
 
     def _ensure_connected(self):
         if self._started:
@@ -88,6 +95,15 @@ class ChangeScene(Action):
 
     def __call__(self, scene: KeyScene, key: OBSKey, click: ClickType):
         self.obs.obs(requests.SetCurrentScene(self.name))
+
+
+class ObsAction(Action):
+    def __init__(self, obs: OBS, callable: Callable[[OBS], None]):
+        self.obs = obs
+        self.callable = callable
+
+    def __call__(self, scene: KeyScene, key: OBSKey, click: ClickType):
+        self.callable(self.obs)
 
 
 class ToggleSource(Action):

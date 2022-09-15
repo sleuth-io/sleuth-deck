@@ -37,10 +37,18 @@ class Command(Action):
         subprocess.run([self.command] + list(self.args))
 
 
+class Wait(Action):
+    def __init__(self, seconds: int = 1):
+        self.seconds = seconds
+
+    def __call__(self, scene: KeyScene, key: Key, click: ClickType):
+        sleep(self.seconds)
+
+
 class Toggle(Action):
-    def __init__(self, on_enable: Action, on_disable: Action, initial: bool = False) -> None:
-        self._on_enable = on_enable
-        self._on_disable = on_disable
+    def __init__(self, on_enable: Union[list[Action], Action], on_disable: Union[list[Action], Action], initial: bool = False) -> None:
+        self._on_enable = on_enable if not isinstance(on_enable, list) else Sequential(*on_enable)
+        self._on_disable = on_disable if not isinstance(on_disable, list) else Sequential(*on_disable)
         self._state = initial
 
     def __call__(self, scene: KeyScene, key: IconKey, click: ClickType):
