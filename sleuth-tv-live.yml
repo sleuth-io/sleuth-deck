@@ -1,15 +1,23 @@
-title: "Does accuracy matter with DORA metrics?"
+title: "Where are you on the DORA metrics journey??"
 guest:
-  name: Kate
-  title: Head of Engineering
+  name: Leigh Ann
+  title: Head of Customer Success
 sections:
   - title: Welcome!
     byline: "Ask questions at any time in chat"
-  - title: "Does accuracy matter?"
-    byline: "No! ... and yes."
-  - title: "Introducing Kate Bierbaum"
-    byline: "Head of Engineering at Sleuth"
+  - title: Studio tour time
+    byline: "Behind the scenes here at Sleuth TV"
+  - title: "DORA metrics: what's next?"
+    byline: "Let's hear some stories!"
+  - title: "Introducing Leigh Ann Whitmarsh"
+    byline: "Head of Customer Success at Sleuth"
+  - title: "Level 1 - Find the metric for your pain"
+    byline: "What pain are you trying to solve?"
+  - title: "Level 2 - Track all metrics"
+    byline: "What new insight did you not expect?"
+  - title: "Level 3 - Uncover areas to improve"
+    byline: "What do you do to fix things?"
+  - title: "Level 4 - Monitor for change impact"
+    byline: "How to future changes affect metrics?"
   - title: "Closing thoughts"
-    byline: "DORA metrics are just the beginning"
-  - title: "Up next: Stages of DORA metrics adoption"
-    byline: "Where are you? Where do you want to go next?"
+    byline: "Always be learning"

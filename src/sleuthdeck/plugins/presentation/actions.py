@@ -5,7 +5,7 @@ from time import sleep
 from typing import Optional, List
 
 import yaml
-from obswebsocket import requests
+from obsws_python.error import OBSSDKError
 from slugify import slugify
 
 from sleuthdeck.deck import Action, KeyScene, Key, ClickType
@@ -62,8 +62,11 @@ class Presentation:
             sections = [Section(title=s["title"], byline=s["byline"]) for s in data["sections"]]
 
         if "guest" in data:
-            self.obs.obs(requests.SetTextFreetype2Properties(self.guest_name_item, text=data["guest"]["name"]))
-            self.obs.obs(requests.SetTextFreetype2Properties(self.guest_title_item, text=data["guest"]["title"]))
+            try:
+                self.obs.set_item_property(self.guest_name_item, "text", data["guest"]["name"])
+                self.obs.set_item_property(self.guest_title_item, "text", data["guest"]["title"])
+            except OBSSDKError:
+                print("Error resetting guest labels")
 
         self.event = Event(
             title=data["title"],
@@ -72,7 +75,7 @@ class Presentation:
 
     def next_section(self) -> Action:
         def action(scene: KeyScene, key: Key, click: ClickType):
-            self._update_labels(self._next_section())
+            self._update_labels(self._next_section(), new_scene=False)
 
         return action
 
@@ -87,20 +90,20 @@ class Presentation:
 
     def previous_section(self) -> Action:
         def action(scene: KeyScene, key: Key, click: ClickType):
-            self._update_labels(self._previous_section())
+            self._update_labels(self._previous_section(), new_scene=False)
 
         return action
 
     def _update_labels(self, section, new_scene=True):
-        self.obs.obs(requests.SetSceneItemRender(self.title_scene_item, False, self.overlay_scene))
-        self.obs.obs(requests.SetSceneItemRender(self.byline_scene_item, False, self.overlay_scene))
-        self.obs.obs(requests.SetTextFreetype2Properties(self.title_scene_item, text=section.title))
-        self.obs.obs(requests.SetTextFreetype2Properties(self.byline_scene_item, text=section.byline))
+        self.obs.set_scene_item_enabled(self.overlay_scene, self.title_scene_item, False)
+        self.obs.set_scene_item_enabled(self.overlay_scene, self.byline_scene_item, False)
+        self.obs.set_item_property(self.title_scene_item, "text", section.title)
+        self.obs.set_item_property(self.byline_scene_item, "text", section.byline)
         if new_scene:
-            self.obs.obs(requests.SetCurrentScene(self.title_scene))
-        sleep(.3)
-        self.obs.obs(requests.SetSceneItemRender(self.title_scene_item, True, self.overlay_scene))
-        self.obs.obs(requests.SetSceneItemRender(self.byline_scene_item, True, self.overlay_scene))
+            self.obs.change_scene(self.title_scene)
+            sleep(.3)
+        self.obs.set_scene_item_enabled(self.overlay_scene, self.title_scene_item, True)
+        self.obs.set_scene_item_enabled(self.overlay_scene, self.byline_scene_item, True)
 
     def _next_section(self) -> Section:
         if len(self.event.sections) - 1 == self.current_section_idx:

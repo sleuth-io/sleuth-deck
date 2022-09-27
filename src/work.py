@@ -163,15 +163,15 @@ def run(deck: Deck):
     )
     webinar_scene.add(
         (0, 3),
-        FontAwesomeKey("solid/arrow-left", text="Prev", actions=[presso.previous_section(),
-                                                                 Pause(3),
-                                                                 obs.change_scene("Me full")]),
+        FontAwesomeKey("solid/arrow-left", text="Prev", actions=[presso.previous_section(),]),
+                                                                 # Pause(3),
+                                                                 # obs.change_scene("Me full")]),
     )
     webinar_scene.add(
         (0, 4),
-        FontAwesomeKey("solid/arrow-right", text="Next", actions=[presso.next_section(),
-                                                                  Pause(3),
-                                                                  obs.change_scene("Me full")]),
+        FontAwesomeKey("solid/arrow-right", text="Next", actions=[presso.next_section(),]),
+                                                                  # Pause(3),
+                                                                  # obs.change_scene("Me full")]),
     )
 
     webinar_scene.add(

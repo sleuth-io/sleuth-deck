@@ -12,7 +12,7 @@ help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
 venv: ## Create python venv
-	python3.9 -m venv venv
+	python3.10 -m venv venv
 	venv/bin/pip install pip-tools
 	venv/bin/pip-compile
 	venv/bin/pip install -r requirements.txt

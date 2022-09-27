@@ -4,7 +4,8 @@ Pillow
 psutil
 pydub
 selenium
-obs-websocket-py
+#obs-websocket-py
+obsws-python
 watchdog
 pyautogui
 cairosvg
