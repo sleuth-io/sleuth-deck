@@ -6,12 +6,12 @@ from sleuthdeck.actions import MaximizeWindow, Toggle, UnMaximizeWindow, DeckBri
     PreviousScene, Wait
 from sleuthdeck.actions import MoveWindow
 from sleuthdeck.actions import SendHotkey, Command, CloseWindow, Pause
-from sleuthdeck.deck import Deck
+from sleuthdeck.deck import Deck, KeyScene
 from sleuthdeck.keys import IconKey, FontAwesomeKey
 from sleuthdeck.plugins import sound
 from sleuthdeck.plugins import twitch
 from sleuthdeck.plugins import zoom
-from sleuthdeck.plugins.obs.actions import OBSKey, OBS
+from sleuthdeck.plugins.obs.actions import OBSKey, OBS, ObsAction
 from sleuthdeck.plugins.presentation.actions import Presentation
 from sleuthdeck.plugins.twitch.actions import TwitchKey
 from sleuthdeck.windows import By
@@ -23,17 +23,22 @@ def run(deck: Deck):
     deck.stream_deck.set_brightness(70)
     scene1 = deck.new_key_scene()
     stream_scene = deck.new_key_scene()
-    webinar_scene = deck.new_key_scene()
+    webinar1_scene = deck.new_key_scene()
+    webinar2_scene = deck.new_key_scene()
     intro = deck.new_video_scene(
         os.path.join(ASSETS_PATH, "intro.mpg"),
         on_finish=lambda: deck.change_scene(scene1),
     )
     obs = OBS(password=os.getenv("OBS_PASSWORD"))
-    presso = Presentation(obs, "../sleuth-tv-live.yml",
+    presso = Presentation(obs, "../sleuth-tv-live-s02e03.yml",
                           title_scene_item="Title",
                           byline_scene_item="Byline",
                           title_scene="Me full (title)",
                           overlay_scene="[Scene] Lower-third (labels)")
+
+    build_webinar1_scene(obs, presso, scene1, webinar1_scene)
+    build_webinar2_scene(obs, presso, scene1, webinar2_scene)
+    build_stream_scene(obs, scene1, stream_scene)
 
     scene1.add(
         (0, 0),
@@ -98,12 +103,31 @@ def run(deck: Deck):
     )
 
     scene1.add(
+        (1, 1),
+        IconKey(
+            os.path.join(dirname(__file__), "sleuthdeck", "plugins", "twitch", "assets", "twitch-logo.png"),
+            text="Webinar 1",
+            actions=[ChangeScene(webinar1_scene)]
+        ),
+    )
+
+    scene1.add(
         (1, 2),
         IconKey(
             os.path.join(dirname(__file__), "sleuthdeck", "plugins", "twitch", "assets", "twitch-logo.png"),
-            text="Webinar",
-            actions=[ChangeScene(webinar_scene)]
+            text="Webinar 2",
+            actions=[ChangeScene(webinar2_scene)]
         ),
+    )
+
+    scene1.add(
+        (1, 3),
+        FontAwesomeKey("solid/camera", text="preview", actions=[
+            ObsAction(obs, lambda obs_: obs.call("OpenVideoMixProjector", {
+                "videoMixType": "OBS_WEBSOCKET_VIDEO_MIX_TYPE_PREVIEW",
+                "monitorIndex": 0,
+                }))
+        ])
     )
 
     scene1.add(
@@ -142,121 +166,13 @@ def run(deck: Deck):
         ]),
     )
 
-    webinar_scene.add(
-        (0, 0),
-        OBSKey(text="Intro", actions=[presso.reset(),
-                                      obs.change_scene("Starting soon"),
-                                      Wait(62),
-                                      obs.start_recording(),
-                                      obs.change_scene("Intro video"),
-                                      Wait(6),
-                                      obs.change_scene("Me full")]),
-    )
-    webinar_scene.add(
-        (0, 1),
-        OBSKey(text="Logo", actions=[obs.change_scene("Intro video")]),
-    )
 
-    webinar_scene.add(
-        (0, 2),
-        FontAwesomeKey("regular/flag", text="Reset", actions=[presso.reset()]),
-    )
-    webinar_scene.add(
-        (0, 3),
-        FontAwesomeKey("solid/arrow-left", text="Prev", actions=[presso.previous_section(),]),
-                                                                 # Pause(3),
-                                                                 # obs.change_scene("Me full")]),
-    )
-    webinar_scene.add(
-        (0, 4),
-        FontAwesomeKey("solid/arrow-right", text="Next", actions=[presso.next_section(),]),
-                                                                  # Pause(3),
-                                                                  # obs.change_scene("Me full")]),
-    )
 
-    webinar_scene.add(
-        (2, 3),
-        TwitchKey(text="Start",
-                  profile_dir="/home/mrdon/.config/google-chrome",
-                  actions=[
-                      obs.close(),
-                      Command("gtk-launch", "obs-webinar"),
-                      Command("gtk-launch", "chromium https://www.youtube.com/live_chat?is_popout=1&v=i-Lz4bhUNO8"),
-                      MoveWindow(By.window_class("chromium.Chromium"), "6000", 0, 100, 100),
-                      MaximizeWindow(By.window_class("chromium.Chromium"), ),
-                      Pause(5),
-                      SendHotkey(By.window_class("chromium.Chromium"), "f11"),
-                      obs.change_scene("Starting soon"),
-                  ]),
-    )
+    # scene1.set_key(0, sleuth.RepoLockKey(project="sleuth", deployment="application"))
+    intro.activate()
 
-    webinar_scene.add(
-        (1, 0),
-        OBSKey(text="Host", actions=[obs.change_scene("Me full")]),
-    )
 
-    webinar_scene.add(
-        (1, 1),
-        OBSKey(text="Share", actions=[obs.change_scene("Me screenshare")]),
-    )
-
-    webinar_scene.add(
-        (1, 2),
-        FontAwesomeKey("brands/rocketchat", text="Chat", actions=[
-            Toggle(on_enable=[obs.toggle_source("Title", False, "[Scene] Lower-third (labels)"),
-                              obs.toggle_source("Byline", False, "[Scene] Lower-third (labels)"),
-                              obs.toggle_source("Chat highlight", True, "[Scene] Lower-third (labels)"),
-                              ],
-                   on_disable=[
-                       obs.toggle_source("Chat highlight", False, "[Scene] Lower-third (labels)"),
-                       obs.toggle_source("Title", True, "[Scene] Lower-third (labels)"),
-                       obs.toggle_source("Byline", True, "[Scene] Lower-third (labels)"),
-
-                   ])])
-    )
-    webinar_scene.add(
-        (1, 4),
-        FontAwesomeKey("solid/camera", text="T Cam", actions=[obs.toggle_source("[Scene] Me corner (shadowed)"),
-                                                              ]),
-    )
-
-    webinar_scene.add(
-        (2, 0),
-        OBSKey(text="Both", actions=[obs.change_scene("Me and Guest")]),
-    )
-
-    webinar_scene.add(
-        (2, 1),
-        OBSKey(text="Guest", actions=[obs.change_scene("Guest full")]),
-    )
-
-    # webinar_scene.add(
-    #     (2, 2),
-    #     OBSKey(text="Share", actions=[obs.change_scene("Guest screenshare")]),
-    # )
-    webinar_scene.add(
-        (2, 2),
-        OBSKey(text="Commercial", actions=[obs.change_scene("Commercial")]),
-    )
-    #
-    # webinar_scene.add(
-    #     (2, 2),
-    #     OBSKey(text="News", actions=[obs.change_scene("News")]),
-    # )
-    webinar_scene.add(
-        (2, 3),
-        OBSKey(text="End", actions=[obs.change_scene("Ending"),
-                                    Wait(2),
-                                    obs.stop_recording()]),
-    )
-
-    webinar_scene.add(
-        (2, 4),
-        FontAwesomeKey("regular/circle-stop",
-                       text="Exit",
-                       actions=[ChangeScene(scene1)])
-    )
-
+def build_stream_scene(obs, scene1, stream_scene):
     stream_scene.add(
         (0, 0),
         OBSKey(text="Webcam", actions=[obs.change_scene("Coding - Webcam")]),
@@ -332,5 +248,123 @@ def run(deck: Deck):
                        actions=[ChangeScene(scene1)])
     )
 
-    # scene1.set_key(0, sleuth.RepoLockKey(project="sleuth", deployment="application"))
-    intro.activate()
+
+def build_webinar1_scene(obs: OBS, presso: Presentation, parent_scene: KeyScene, webinar_scene: KeyScene):
+    _build_webinar_scene_base(obs, parent_scene, presso, webinar_scene)
+
+    webinar_scene.add(
+        (2, 0),
+        OBSKey(text="Host 2", actions=[obs.change_scene("Me and Guest (local)")]),
+    )
+
+
+def build_webinar2_scene(obs: OBS, presso: Presentation, parent_scene: KeyScene, webinar_scene: KeyScene):
+    _build_webinar_scene_base(obs, parent_scene, presso, webinar_scene)
+
+    webinar_scene.add(
+        (2, 0),
+        OBSKey(text="3 way", actions=[obs.change_scene("Me and 2 Guests")]),
+    )
+
+    webinar_scene.add(
+        (2, 2),
+        OBSKey(text="Guest2", actions=[obs.change_scene("Guest 2 full")]),
+    )
+
+
+def _build_webinar_scene_base(obs, parent_scene, presso, webinar_scene):
+    webinar_scene.add(
+        (0, 0),
+        OBSKey(text="Intro", actions=[presso.reset(),
+                                      obs.change_scene("Starting soon"),
+                                      Wait(62),
+                                      # Wait(5),
+                                      obs.start_recording(),
+                                      obs.change_scene("Intro video"),
+                                      Wait(6),
+                                      presso.next_section(),
+                                      obs.change_scene("Me full")]),
+    )
+    webinar_scene.add(
+        (0, 1),
+        OBSKey(text="Logo", actions=[obs.change_scene("Intro video")]),
+    )
+    webinar_scene.add(
+        (0, 2),
+        FontAwesomeKey("regular/flag", text="Reset", actions=[presso.reset()]),
+    )
+    webinar_scene.add(
+        (0, 3),
+        FontAwesomeKey("solid/arrow-left", text="Prev", actions=[presso.previous_section(), ]),
+        # Pause(3),
+        # obs.change_scene("Me full")]),
+    )
+    webinar_scene.add(
+        (0, 4),
+        FontAwesomeKey("solid/arrow-right", text="Next", actions=[presso.next_section(), ]),
+        # Pause(3),
+        # obs.change_scene("Me full")]),
+    )
+    # webinar_scene.add(
+    #     (2, 3),
+    #     TwitchKey(text="Start",
+    #               profile_dir="/home/mrdon/.config/google-chrome",
+    #               actions=[
+    #                   obs.close(),
+    #                   Command("gtk-launch", "obs-webinar"),
+    #                   Command("gtk-launch", "chromium https://www.youtube.com/live_chat?is_popout=1&v=i-Lz4bhUNO8"),
+    #                   MoveWindow(By.window_class("chromium.Chromium"), "6000", 0, 100, 100),
+    #                   MaximizeWindow(By.window_class("chromium.Chromium"), ),
+    #                   Pause(5),
+    #                   SendHotkey(By.window_class("chromium.Chromium"), "f11"),
+    #                   obs.change_scene("Starting soon"),
+    #               ]),
+    # )
+    webinar_scene.add(
+        (1, 0),
+        OBSKey(text="Host", actions=[obs.change_scene("Me full")]),
+    )
+    webinar_scene.add(
+        (1, 1),
+        OBSKey(text="Host Share", actions=[obs.change_scene("Me screenshare")]),
+    )
+    webinar_scene.add(
+        (1, 2),
+        OBSKey(text="Guest 1 share", actions=[obs.change_scene("Guest 1 screenshare")]),
+    )
+    webinar_scene.add(
+        (1, 3),
+        FontAwesomeKey("brands/rocketchat", text="Chat", actions=[
+            Toggle(on_enable=[obs.toggle_source("Title", False, "[Scene] Lower-third (labels)"),
+                              obs.toggle_source("Byline", False, "[Scene] Lower-third (labels)"),
+                              obs.toggle_source("Chat highlight", True, "[Scene] Lower-third (labels)"),
+                              ],
+                   on_disable=[
+                       obs.toggle_source("Chat highlight", False, "[Scene] Lower-third (labels)"),
+                       obs.toggle_source("Title", True, "[Scene] Lower-third (labels)"),
+                       obs.toggle_source("Byline", True, "[Scene] Lower-third (labels)"),
+
+                   ])])
+    )
+    webinar_scene.add(
+        (1, 4),
+        FontAwesomeKey("solid/camera", text="T Cam", actions=[obs.toggle_source("[Scene] Me corner (shadowed)"),
+                                                              ]),
+    )
+    webinar_scene.add(
+        (2, 1),
+        OBSKey(text="Guest1", actions=[obs.change_scene("Guest 1 full")]),
+    )
+    webinar_scene.add(
+        (2, 3),
+        OBSKey(text="End", actions=[obs.change_scene("Ending"),
+                                    Wait(2),
+                                    obs.stop_recording()]),
+    )
+    webinar_scene.add(
+        (2, 4),
+        FontAwesomeKey("regular/circle-stop",
+                       text="Exit",
+                       actions=[ChangeScene(parent_scene)])
+    )
+

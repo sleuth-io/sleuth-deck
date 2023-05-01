@@ -1,0 +1,24 @@
+title: "Goals and automations"
+guest1:
+  name: Daniel
+  title: Head of Product / Sleuth
+guest2:
+  name: Matt
+  title: Head of Engineering / Rewind
+sections:
+  - title: Goals and automations
+    byline: "We'll be starting soon . . . "
+  - title: Welcome!
+    byline: "Ask questions at any time in chat"
+  - title: "What's new in Sleuth"
+    byline: "Let's dig into the monthly newsletter"
+  - title: "Goals and automations"
+    byline: "Improve what you care about"
+  - title: "Welcome Matt from Rewind"
+    byline: "Oh, and Daniel from Sleuth :)"
+  - title: "Introducing Goals"
+    byline: "Let Sleuth do the tracking for you"
+  - title: "Closing thoughts"
+    byline: "DORA metrics is only the beginning"
+  - title: "Up next: Automations preview"
+    byline: "Sneak peak at new improvement tools"

@@ -27,20 +27,30 @@ class Event:
 class Section:
     title: str
     byline: str
+    scene: str | None
 
 
 class Presentation:
     def __init__(self, obs: OBS, path: str, title_scene_item="Section title",
                 byline_scene_item="Section byline",
                  title_scene="Title", overlay_scene="Overlay",
-                 guest_name_item="Guest 1",
-                 guest_title_item="Guest 2"):
+                 guest1_name_item="Guest 1a",
+                 guest1_title_item="Guest 1b",
+                 guest2_name_item="Guest 2a",
+                 guest2_title_item="Guest 2b"
+                 ):
         self.path = path
         self.obs = obs
-        self.guest_name_item = guest_name_item
-        self.guest_title_item = guest_title_item
+        self.guest1_name_item = guest1_name_item
+        self.guest1_title_item = guest1_title_item
+        self.guest2_name_item = guest2_name_item
+        self.guest2_title_item = guest2_title_item
 
-        self._reload()
+        try:
+            self._reload()
+        except ConnectionError:
+            return
+
         if not self.event.sections:
             return
 
@@ -59,12 +69,19 @@ class Presentation:
                 self.event = Event("Missing", [])
         sections = []
         if "sections" in data:
-            sections = [Section(title=s["title"], byline=s["byline"]) for s in data["sections"]]
+            sections = [Section(title=s["title"], byline=s["byline"], scene=s.get("scene")) for s in data["sections"]]
 
-        if "guest" in data:
+        if "guest1" in data:
             try:
-                self.obs.set_item_property(self.guest_name_item, "text", data["guest"]["name"])
-                self.obs.set_item_property(self.guest_title_item, "text", data["guest"]["title"])
+                self.obs.set_item_property(self.guest1_name_item, "text", data["guest1"]["name"])
+                self.obs.set_item_property(self.guest1_title_item, "text", data["guest1"]["title"])
+            except OBSSDKError:
+                print("Error resetting guest labels")
+
+        if "guest2" in data:
+            try:
+                self.obs.set_item_property(self.guest2_name_item, "text", data["guest2"]["name"])
+                self.obs.set_item_property(self.guest2_title_item, "text", data["guest2"]["title"])
             except OBSSDKError:
                 print("Error resetting guest labels")
 
@@ -75,7 +92,9 @@ class Presentation:
 
     def next_section(self) -> Action:
         def action(scene: KeyScene, key: Key, click: ClickType):
-            self._update_labels(self._next_section(), new_scene=False)
+            section = self._next_section()
+
+            self._update_labels(section, next_scene=section.scene)
 
         return action
 
@@ -84,23 +103,24 @@ class Presentation:
             if reload:
                 self._reload()
             self.current_section_idx = 0
-            self._update_labels(self.event.sections[0], new_scene=False)
+            self._update_labels(self.event.sections[0])
 
         return action
 
     def previous_section(self) -> Action:
         def action(scene: KeyScene, key: Key, click: ClickType):
-            self._update_labels(self._previous_section(), new_scene=False)
+            section = self._previous_section()
+            self._update_labels(section, next_scene=section.scene)
 
         return action
 
-    def _update_labels(self, section, new_scene=True):
+    def _update_labels(self, section, next_scene: str | None = False):
         self.obs.set_scene_item_enabled(self.overlay_scene, self.title_scene_item, False)
         self.obs.set_scene_item_enabled(self.overlay_scene, self.byline_scene_item, False)
         self.obs.set_item_property(self.title_scene_item, "text", section.title)
         self.obs.set_item_property(self.byline_scene_item, "text", section.byline)
-        if new_scene:
-            self.obs.change_scene(self.title_scene)
+        if next_scene:
+            self.obs.call("SetCurrentProgramScene", {"sceneName": next_scene})
             sleep(.3)
         self.obs.set_scene_item_enabled(self.overlay_scene, self.title_scene_item, True)
         self.obs.set_scene_item_enabled(self.overlay_scene, self.byline_scene_item, True)

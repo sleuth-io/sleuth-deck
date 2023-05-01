@@ -1,0 +1,31 @@
+title: "Mastering work in progress"
+guest1:
+  name: Daniel
+  title: Director of Product | Sleuth
+guest2:
+  name: Torsten
+  title: Software Engineering Manager | Article
+sections:
+  - title: Mastering work in progress
+    byline: We'll be starting shortly . . .
+  - title: Welcome!
+    byline: "Ask questions at any time in chat"
+  - title: Mastering work in progress
+    byline: "Welcome Torsten from Article"
+    scene: "Me and 2 Guests"
+#  - title: Studio tour time
+#    byline: "Behind the scenes here at Sleuth TV"
+#  - title: "DORA metrics: what's next?"
+#    byline: "Let's hear some stories!"
+#  - title: "Introducing Leigh Ann Whitmarsh"
+#    byline: "Head of Customer Success at Sleuth"
+#  - title: "Level 1 - Find the metric for your pain"
+#    byline: "What pain are you trying to solve?"
+#  - title: "Level 2 - Track all metrics"
+#    byline: "What new insight did you not expect?"
+#  - title: "Level 3 - Uncover areas to improve"
+#    byline: "What do you do to fix things?"
+#  - title: "Level 4 - Monitor for change impact"
+#    byline: "How to future changes affect metrics?"
+#  - title: "Closing thoughts"
+#    byline: "Always be learning"

@@ -1,21 +1,98 @@
+import base64
+import hashlib
+import json
 from os import path
 from os.path import dirname
+from random import randint
 from time import sleep
 from typing import Any, Callable
 from typing import List
 from typing import Optional
 
-from obsws_python.baseclient import ObsClient
 from obsws_python.error import OBSSDKError
 from obsws_python.util import as_dataclass
-from websocket import WebSocketConnectionClosedException
 
-from sleuthdeck.actions import SendHotkey
 from sleuthdeck.deck import Action
 from sleuthdeck.deck import ClickType
 from sleuthdeck.deck import KeyScene
 from sleuthdeck.keys import IconKey
 from sleuthdeck.windows import get_window, By
+
+import websocket
+
+
+# Copied from obsws_python 1.1.1, fixed to support reconnection
+class ReconnectingObsClient:
+    DELAY = 0.001
+
+    def __init__(self, host: str, port: int, password: str):
+        self.ws = websocket.WebSocket()
+        self.host = host
+        self.port = port
+        self.password = password
+        self.subs = 0
+        self._connected = False
+
+    def connect(self):
+        if not self._connected:
+            self.ws.connect(f"ws://{self.host}:{self.port}")
+            self._authenticate(json.loads(self.ws.recv()))
+            self._connected = True
+
+    def _authenticate(self, server_hello):
+        secret = base64.b64encode(
+            hashlib.sha256(
+                (
+                    self.password + server_hello["d"]["authentication"]["salt"]
+                ).encode()
+            ).digest()
+        )
+
+        auth = base64.b64encode(
+            hashlib.sha256(
+                (
+                    secret.decode()
+                    + server_hello["d"]["authentication"]["challenge"]
+                ).encode()
+            ).digest()
+        ).decode()
+
+        payload = {
+            "op": 1,
+            "d": {
+                "rpcVersion": 1,
+                "authentication": auth,
+                "eventSubscriptions": self.subs,
+            },
+        }
+
+        self.ws.send(json.dumps(payload))
+        return self.ws.recv()
+
+    def req(self, req_type, req_data=None):
+        self.connect()
+        if req_data:
+            payload = {
+                "op": 6,
+                "d": {
+                    "requestType": req_type,
+                    "requestId": randint(1, 1000),
+                    "requestData": req_data,
+                },
+            }
+        else:
+            payload = {
+                "op": 6,
+                "d": {"requestType": req_type, "requestId": randint(1, 1000)},
+            }
+        try:
+            self.ws.send(json.dumps(payload))
+        except ConnectionError as ex:
+            print(f"Disconnected: {ex}")
+            self._connected = False
+            raise ex
+        response = json.loads(self.ws.recv())
+        return response["d"]
 
 
 class OBS:
@@ -25,7 +102,7 @@ class OBS:
         if not password:
             raise ValueError("Missing password for obs")
         self._started = False
-        self.client = ObsClient(host=host, port=port, password=password)
+        self.client = ReconnectingObsClient(host=host, port=port, password=password)
 
     def change_scene(self, name: str):
         return ChangeScene(self, name)
@@ -37,33 +114,30 @@ class OBS:
         return ToggleSource(self, name, show, scene=scene)
 
     def set_scene_item_enabled(self, scene: str, name: str, enabled: bool = True):
+        resp = self.call("GetSceneItemId", {
+            "sceneName": scene,
+            "sourceName": name,
+        })
         self.call("SetSceneItemEnabled", {
             "sceneName": scene,
-            "sceneItemId": name,
+            "sceneItemId": resp.scene_item_id,
             "sceneItemEnabled": enabled,
         })
 
     def stop_recording(self):
-        return ObsAction(self, lambda obs: obs.call("StopRecording"))
+        return ObsAction(self, lambda obs: obs.call("StopRecord"))
 
     def start_recording(self):
-        return ObsAction(self, lambda obs: obs.call("StartRecording"))
+        return ObsAction(self, lambda obs: obs.call("StartRecord"))
 
     def set_item_property(self, name: str, property: str, value: Any):
         self.call("SetInputSettings", {"inputName": name,
                                            "inputSettings": {property: value},
                                            "overlay": True})
 
-    def _ensure_connected(self):
-        if self._started:
-            return self.client
-
-        self.client.authenticate()
-        self._started = True
-
     def call(self, param, data=None) -> Any:
-        self._ensure_connected()
         response = self.client.req(param, data)
+
         if not response["requestStatus"]["result"]:
             error = (
                 f"Request {response['requestType']} returned code {response['requestStatus']['code']}",
@@ -131,9 +205,13 @@ class ToggleSource(Action):
 
     def __call__(self, scene: KeyScene, key: OBSKey, click: ClickType):
         if self._show is None:
+            resp = self.call("GetSceneItemId", {
+                "sceneName": scene,
+                "sourceName": self.name,
+            })
             visible = self.obs.call("GetSceneItemEnabled", {
                 "sceneName": self.scene,
-                "sceneItemId": self.name,
+                "sceneItemId": resp.scene_item_id,
                 }).sceneItemEnabled
         else:
             visible = self._show
