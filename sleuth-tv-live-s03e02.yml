@@ -1,0 +1,27 @@
+title: "Announcing Sleuth Automations!"
+guest1:
+  name: Dylan
+  title: CEO/Co-founder | Sleuth
+sections:
+  - title: Announcing Sleuth Automations
+    byline: "We'll be starting soon . . . "
+  - title: Welcome!
+    byline: "Ask questions at any time in chat"
+  - title: "Launch video"
+    byline: ""
+    scene: "Commercial"
+  - title: "Welcome Dylan"
+    byline: "CEO and co-founder of Sleuth"
+    scene: "Me and Guest"
+  - title: "Who is this for?"
+    byline: "Who needs automations and why"
+  - title: "Sleuth Automations demo"
+    byline: "Let's see it in practice!"
+  - title: "How we are using it today"
+    byline: "These are just a few of our favorite things"
+  - title: "How others have used it"
+    byline: "And how you can too!"
+  - title: "Questions"
+    byline: "Checkout the marketplace at https://marketplace.sleuth.io"
+  - title: "Up next: State of Devops Report 2023"
+    byline: "We are partnering again with DORA to discuss the latest report"

@@ -35,7 +35,8 @@ class IconKey(Key):
         text: Optional[str] = None,
         actions: List[Action] = None,
         base_path: Optional[str] = None,
-        image_loader: Callable[[Deck], Image] = None
+        image_loader: Callable[[Deck], Image] = None,
+            **kwargs
     ):
 
         full_path = (
@@ -47,7 +48,7 @@ class IconKey(Key):
             image_loader = partial(IconKey.load_image, image_file=full_path, text=text)
 
         self._image_loader = image_loader
-        super().__init__(actions=actions)
+        super().__init__(actions=actions, **kwargs)
 
     def update_icon(self, **kwargs):
         self._image_loader = partial(self._image_loader, **kwargs)

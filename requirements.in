@@ -1,4 +1,4 @@
-streamdeck
+streamdeck>=0.9.5
 opencv-python-headless
 Pillow
 psutil
@@ -9,6 +9,8 @@ obsws-python
 watchdog
 pyautogui
 cairosvg
+pygobject
+pynput
 
 elgato
 

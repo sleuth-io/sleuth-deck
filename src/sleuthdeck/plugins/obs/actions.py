@@ -1,6 +1,8 @@
 import base64
 import hashlib
 import json
+from collections import namedtuple
+from dataclasses import dataclass
 from os import path
 from os.path import dirname
 from random import randint
@@ -9,6 +11,7 @@ from typing import Any, Callable
 from typing import List
 from typing import Optional
 
+import pyautogui
 from obsws_python.error import OBSSDKError
 from obsws_python.util import as_dataclass
 
@@ -43,7 +46,7 @@ class ReconnectingObsClient:
         secret = base64.b64encode(
             hashlib.sha256(
                 (
-                    self.password + server_hello["d"]["authentication"]["salt"]
+                        self.password + server_hello["d"]["authentication"]["salt"]
                 ).encode()
             ).digest()
         )
@@ -51,8 +54,8 @@ class ReconnectingObsClient:
         auth = base64.b64encode(
             hashlib.sha256(
                 (
-                    secret.decode()
-                    + server_hello["d"]["authentication"]["challenge"]
+                        secret.decode()
+                        + server_hello["d"]["authentication"]["challenge"]
                 ).encode()
             ).digest()
         ).decode()
@@ -132,8 +135,30 @@ class OBS:
 
     def set_item_property(self, name: str, property: str, value: Any):
         self.call("SetInputSettings", {"inputName": name,
-                                           "inputSettings": {property: value},
-                                           "overlay": True})
+                                       "inputSettings": {property: value},
+                                       "overlay": True})
+
+    def get_filter_settings(self, source_name: str, filter_name: str):
+        return self.call("GetSourceFilter", {"sourceName": source_name,
+                                             "filterName": filter_name})
+
+    def set_filter_properties(self, source_name: str, filter_name: str, **kwargs):
+        print(f"setting properties {kwargs}")
+        self.call("SetSourceFilterSettings", {"sourceName": source_name,
+                                              "filterName": filter_name,
+                                              "filterSettings": kwargs})
+
+    def toggle_filter(self, source_name: str, filter_name: str, enabled: bool = True):
+        self.call("SetSourceFilterEnabled", {"sourceName": source_name,
+                                              "filterName": filter_name,
+                                              "filterEnabled": enabled})
+
+    def call_vendor(self, vendor: str, param: str, data=None) -> Any:
+        return self.call("CallVendorRequest", dict(
+            requestType=param,
+            requestData=data,
+            vendorName=vendor,
+        ))
 
     def call(self, param, data=None) -> Any:
         response = self.client.req(param, data)
@@ -175,7 +200,7 @@ class Close(Action):
             sleep(.5)
             window.close()
             get_window(By.window_class("obs.obs"), attempts=1)
-            sleep(.5)
+            sleep(5)
 
 
 class ChangeScene(Action):
@@ -197,7 +222,7 @@ class ObsAction(Action):
 
 
 class ToggleSource(Action):
-    def __init__(self, obs: OBS, name: str, show: bool = None, scene = None):
+    def __init__(self, obs: OBS, name: str, show: bool = None, scene=None):
         self.name = name
         self.obs = obs
         self.scene = scene
@@ -212,10 +237,84 @@ class ToggleSource(Action):
             visible = self.obs.call("GetSceneItemEnabled", {
                 "sceneName": self.scene,
                 "sceneItemId": resp.scene_item_id,
-                }).sceneItemEnabled
+            }).sceneItemEnabled
         else:
             visible = self._show
 
         print(f"Making {visible}")
 
         self.obs.set_scene_item_enabled(self.scene, self.name, visible)
+
+
+@dataclass
+class Crop:
+    top: int
+    bottom: int
+    left: int
+    right: int
+
+
+class ZoomToMouse(Action):
+    def __init__(self, obs: OBS, scene: str, move_filter_name: str, source_crop: Crop):
+        self.obs = obs
+        self.scene = scene
+        self.move_filter_name = move_filter_name
+        self.crop = source_crop
+
+    def __call__(self, scene: KeyScene, key: OBSKey, click: ClickType):
+        import gi
+        gi.require_version("Gdk", "3.0")
+        from gi.repository import Gdk
+
+        gdkdsp = Gdk.Display.get_default()
+
+        screen, x, y, _ = gdkdsp.get_pointer()
+        monitor = gdkdsp.get_monitor_at_point(x, y)
+        geo = monitor.get_geometry()
+        # print(f"pointer: x:{x - geo.x} y:{y - geo.y}")
+
+        viewport_width = 1920
+        viewport_height = 1080
+        zoom_factor = 1.0
+
+        mouse_pos = namedtuple("Point", "x y")(x - geo.x, y - geo.y)
+
+        # settings = self.obs.get_filter_settings(self.scene, self.move_filter_name)
+        # print(f"settings: {settings}, crop: {settings.filter_settings['crop']}")
+
+        new_y = max(min(0, ((mouse_pos.y - self.crop.top) * zoom_factor - (viewport_height / 2)) * -1), (geo.height - viewport_height - (self.crop.bottom + self.crop.top)) * -1)
+        new_x = max(min(0, ((mouse_pos.x - self.crop.left) * zoom_factor - (viewport_width / 2)) * -1), (geo.width - viewport_width - (self.crop.left + self.crop.right)) * -1)
+
+        self.obs.set_filter_properties(self.scene, self.move_filter_name,
+                                     pos={"x": new_x, "x_sign": "", "y": new_y, "y_sign": ""},
+                                    scale = {"x": zoom_factor, "x_sign": "", "y": zoom_factor, "y_sign": ""})
+        self.obs.toggle_filter(self.scene, self.move_filter_name, True)
+
+
+class EnableFilter(Action):
+    def __init__(self, obs: OBS, scene: str, move_filter_name: str):
+        self.obs = obs
+        self.scene = scene
+        self.move_filter_name = move_filter_name
+
+    def __call__(self, scene: KeyScene, key: OBSKey, click: ClickType):
+        self.obs.toggle_filter(self.scene, self.move_filter_name, True)
+
+
+class DisableFilter(Action):
+    def __init__(self, obs: OBS, scene: str, move_filter_name: str):
+        self.obs = obs
+        self.scene = scene
+        self.move_filter_name = move_filter_name
+
+    def __call__(self, scene: KeyScene, key: OBSKey, click: ClickType):
+        self.obs.toggle_filter(self.scene, self.move_filter_name, False)
+
+
+class ChangeVerticalScene(Action):
+    def __init__(self, obs: OBS, name: str):
+        self.name = name
+        self.obs = obs
+
+    def __call__(self, scene: KeyScene, key: OBSKey, click: ClickType):
+        self.obs.call_vendor("aitum-vertical-canvas", "switch_scene", {"scene": self.name})

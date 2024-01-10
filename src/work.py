@@ -7,11 +7,13 @@ from sleuthdeck.actions import MaximizeWindow, Toggle, UnMaximizeWindow, DeckBri
 from sleuthdeck.actions import MoveWindow
 from sleuthdeck.actions import SendHotkey, Command, CloseWindow, Pause
 from sleuthdeck.deck import Deck, KeyScene
+from sleuthdeck.hotkeys import Hotkeys
 from sleuthdeck.keys import IconKey, FontAwesomeKey
 from sleuthdeck.plugins import sound
 from sleuthdeck.plugins import twitch
 from sleuthdeck.plugins import zoom
-from sleuthdeck.plugins.obs.actions import OBSKey, OBS, ObsAction
+from sleuthdeck.plugins.obs.actions import OBSKey, OBS, ObsAction, ZoomToMouse, EnableFilter, ChangeVerticalScene, Crop, \
+    DisableFilter
 from sleuthdeck.plugins.presentation.actions import Presentation
 from sleuthdeck.plugins.twitch.actions import TwitchKey
 from sleuthdeck.windows import By
@@ -25,12 +27,14 @@ def run(deck: Deck):
     stream_scene = deck.new_key_scene()
     webinar1_scene = deck.new_key_scene()
     webinar2_scene = deck.new_key_scene()
+    recording_scene = deck.new_key_scene()
     intro = deck.new_video_scene(
         os.path.join(ASSETS_PATH, "intro.mpg"),
         on_finish=lambda: deck.change_scene(scene1),
     )
+
     obs = OBS(password=os.getenv("OBS_PASSWORD"))
-    presso = Presentation(obs, "../sleuth-tv-live-s02e03.yml",
+    presso = Presentation(obs, "../sleuth-tv-live.yml",
                           title_scene_item="Title",
                           byline_scene_item="Byline",
                           title_scene="Me full (title)",
@@ -39,6 +43,7 @@ def run(deck: Deck):
     build_webinar1_scene(obs, presso, scene1, webinar1_scene)
     build_webinar2_scene(obs, presso, scene1, webinar2_scene)
     build_stream_scene(obs, scene1, stream_scene)
+    build_recording_scene(obs, scene1, recording_scene)
 
     scene1.add(
         (0, 0),
@@ -120,15 +125,15 @@ def run(deck: Deck):
         ),
     )
 
-    scene1.add(
-        (1, 3),
-        FontAwesomeKey("solid/camera", text="preview", actions=[
-            ObsAction(obs, lambda obs_: obs.call("OpenVideoMixProjector", {
-                "videoMixType": "OBS_WEBSOCKET_VIDEO_MIX_TYPE_PREVIEW",
-                "monitorIndex": 0,
-                }))
-        ])
-    )
+    # scene1.add(
+    #     (1, 3),
+    #     FontAwesomeKey("solid/camera", text="preview", actions=[
+    #         ObsAction(obs, lambda obs_: obs.call("OpenVideoMixProjector", {
+    #             "videoMixType": "OBS_WEBSOCKET_VIDEO_MIX_TYPE_PREVIEW",
+    #             "monitorIndex": 0,
+    #             }))
+    #     ])
+    # )
 
     scene1.add(
         (1, 4),
@@ -138,17 +143,33 @@ def run(deck: Deck):
     scene1.add(
         (2, 0),
         FontAwesomeKey(name="regular/file-audio", tint="green", actions=[
-            SendHotkey("Spotify", "space"),
+            SendHotkey(By.window_class("spotify.Spotify"), "space"),
         ]),
+    )
+
+    scene1.add(
+        (2, 1),
+        IconKey(
+            os.path.join(dirname(__file__), "sleuthdeck", "plugins", "twitch", "assets", "twitch-logo.png"),
+            text="Record",
+            actions=[ChangeScene(recording_scene)]
+        ),
+    )
+    scene1.add(
+        (2, 2),
+        FontAwesomeKey(
+            "solid/face-sad-cry",
+            text="",
+            actions=[Toggle(
+                on_enable=EnableFilter(obs, "Webcam", "Shader - rain"),
+                on_disable=DisableFilter(obs, "Webcam", "Shader - rain")
+            )]
+        ),
     )
 
     sleep_toggle = Toggle(
         on_enable=DeckBrightness(5),
         on_disable=DeckBrightness(70),
-    )
-    scene1.add(
-        (2, 3),
-        FontAwesomeKey(name="regular/moon", tint="blue", actions=[sleep_toggle]),
     )
 
     scene1.add(
@@ -166,10 +187,50 @@ def run(deck: Deck):
         ]),
     )
 
-
-
     # scene1.set_key(0, sleuth.RepoLockKey(project="sleuth", deployment="application"))
     intro.activate()
+
+
+def build_recording_scene(obs, scene1, record_scene):
+    record_scene.add(
+        (0, 0),
+        OBSKey(text="Wide", actions=[obs.change_scene("Wide"),
+            ChangeVerticalScene(obs, "[V] Wide")]),
+    )
+    record_scene.add(
+        (0, 2),
+        OBSKey(text="Screenshare", actions=[
+            obs.change_scene("Screenshare"),
+            ChangeVerticalScene(obs, "[V] Screenshare")]),
+    )
+    record_scene.add(
+        (1, 2),
+        OBSKey(text="Screen", actions=[
+            obs.change_scene("Screen only"),
+            ChangeVerticalScene(obs, "[V] Screen only")]),
+    )
+    record_scene.add(
+        (0, 4),
+        OBSKey(text="Side", actions=[
+            obs.change_scene("Side"),
+            ChangeVerticalScene(obs, "[V] Side")]),
+    )
+    record_scene.add(
+        (2, 0),
+        OBSKey(text="Zoom", actions=[ZoomToMouse(obs, "[scene] Screenshare", "Zoomed",
+                                                 Crop(top=128, bottom=412, right=1, left=960))],
+               hotkeys=["5"]),
+    )
+    record_scene.add(
+        (2, 2),
+        OBSKey(text="Zoom out", actions=[EnableFilter(obs, "[scene] Screenshare", "Full screen")]),
+    )
+    record_scene.add(
+        (2, 4),
+        FontAwesomeKey("regular/circle-stop",
+                       text="Exit",
+                       actions=[ChangeScene(scene1)])
+    )
 
 
 def build_stream_scene(obs, scene1, stream_scene):
@@ -254,7 +315,15 @@ def build_webinar1_scene(obs: OBS, presso: Presentation, parent_scene: KeyScene,
 
     webinar_scene.add(
         (2, 0),
-        OBSKey(text="Host 2", actions=[obs.change_scene("Me and Guest (local)")]),
+        OBSKey(text="Host 2", actions=[obs.change_scene("Me and Guest")]),
+    )
+    webinar_scene.add(
+        (2, 2),
+        OBSKey(text="Commercial", actions=[
+            obs.change_scene("Commercial"),
+            Wait(30),
+            obs.change_scene("Me full"),
+        ]),
     )
 
 

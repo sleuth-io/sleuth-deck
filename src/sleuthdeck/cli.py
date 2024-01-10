@@ -39,9 +39,11 @@ class ReloadingHandler(FileSystemEventHandler):
             mod_name = mod_name[:-3]
 
         try:
-            while self._reloading_queue.get():
+            while not self.deck or self._reloading_queue.get():
+                print(f"Running {mod_name}")
                 try:
                     mod = runpy.run_module(mod_name)
+                    print("done running")
                 except:
                     print(f"Error loading script")
                     traceback.print_exc()
@@ -53,19 +55,34 @@ class ReloadingHandler(FileSystemEventHandler):
                 if self.deck:
                     print("Closing old deck")
                     self.deck.close()
-                deck = Deck()
+                try:
+                    deck = Deck()
+                except RuntimeError as e:
+                    print("No streamdeck found, waiting 5s")
+                    time.sleep(5)
+                    self.deck = None
+                    continue
+
                 print(f"Loaded new deck from {self.script}")
                 self.deck = deck
-                with deck:
-                    try:
-                        mod["run"](deck)
-                    except Exception as e:
-                        print(f"Error: {e}")
-                        traceback.print_exc()
-                        continue
+                try:
+                    mod["run"](deck)
+                except Exception as e:
+                    print(f"Error: {e}")
+                    traceback.print_exc()
+                    continue
+                while self.deck.stream_deck.is_open() and self._reloading_queue.empty():
+                    time.sleep(1)
+
+                if not self.deck.stream_deck.is_open():
+                    print("Closing deck")
+                    self.deck = None
+
         except EOFError:
             if self.deck and self.deck.stream_deck.is_open():
                 self.deck.close()
+
+        print("Exiting")
 
     def stop(self):
         self._reloading_queue.close()
@@ -88,7 +105,7 @@ if __name__ == "__main__":
     observer = Observer()
     observer.schedule(event_handler, path=opts.script)
     observer.start()
-    event_handler.on_created(None)
+    # event_handler.on_created(None)
 
     try:
         while True:

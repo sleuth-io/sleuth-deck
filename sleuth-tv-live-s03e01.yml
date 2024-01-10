@@ -1,0 +1,22 @@
+title: "Announcing Sleuth Automations!"
+guest1:
+  name: Eric
+  title: DORA | Google
+sections:
+  - title: "State of DevOps Report 2023"
+    byline: "We'll be starting soon . . . "
+  - title: Welcome!
+    byline: "Ask questions at any time in chat"
+  - title: "Welcome Eric Maxwell"
+    byline: "DORA implementation at Google"
+    scene: "Me and Guest"
+  - title: "What is DORA implementation?"
+    byline: "Let's get some context on Eric"
+  - title: "State of DevOps 2023 report"
+    byline: "Picking out a few highlights"
+  - title: "Let's talk DORA implementation"
+    byline: "Pitfalls, starting points, mistakes, and more"
+  - title: "Questions"
+    byline: "Checkout the report at https://dora.dev"
+  - title: "Thanks Eric!"
+    byline: "Subscribe to stay up to date on future episodes"

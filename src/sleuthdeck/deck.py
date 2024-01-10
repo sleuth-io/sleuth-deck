@@ -20,11 +20,15 @@ from typing import Tuple
 from typing import Union
 
 from PIL import Image
+from StreamDeck.Transport.Transport import TransportError
+
 from sleuthdeck import video
 from sleuthdeck.animation import Animations
 from StreamDeck.DeviceManager import DeviceManager
 from StreamDeck.Devices import StreamDeck
 from StreamDeck.ImageHelpers import PILHelper
+
+from sleuthdeck.hotkeys import Hotkeys
 
 
 class ClickType(Enum):
@@ -43,10 +47,11 @@ class Updatable:
 
 
 class Key:
-    def __init__(self, image: Optional[Image] = None, actions: List[Action] = None):
+    def __init__(self, image: Optional[Image] = None, actions: List[Action] = None, hotkeys: list[str] = None):
         self.image = image
         self.actions = actions if actions is not None else []
         self.clicked_on: Optional[datetime] = None
+        self.hotkeys = hotkeys if hotkeys is not None else []
 
     def connect(self, scene: KeyScene):
         pass
@@ -56,6 +61,8 @@ class Deck:
     def __init__(self):
         print("Scanning for stream decks")
         streamdecks = DeviceManager().enumerate()
+        if not streamdecks:
+            raise RuntimeError("No stream decks found")
         self.stream_deck: StreamDeck = streamdecks[0]
         print(f"Found stream deck: {self.stream_deck.id()}")
 
@@ -67,6 +74,10 @@ class Deck:
             target=self._start_background_loop, args=(self._updating_loop,)
         )
         self._updating_thread.start()
+        self.hotkeys = Hotkeys()
+        self.hotkeys.start()
+        self._animation.start()
+        self._reset_streamdeck()
 
     def start_updating(self, task: Awaitable) -> Future:
         return asyncio.run_coroutine_threadsafe(task, loop=self._updating_loop)
@@ -83,14 +94,11 @@ class Deck:
         finally:
             loop.close()
 
-    def __enter__(self):
+    def _reset_streamdeck(self):
         if self.stream_deck.is_open():
             self.close()
-
         self.stream_deck.open()
         self.stream_deck.reset()
-        self._animation.start()
-        return self
 
     @property
     def scene(self):
@@ -102,6 +110,7 @@ class Deck:
             self._updating_loop.stop()
             self.stream_deck.reset()
             self.stream_deck.close()
+        self.hotkeys.stop()
 
     def new_key_scene(self):
         return KeyScene(self)
@@ -120,15 +129,12 @@ class Deck:
             if getattr(image, "is_animated", False):
                 self._animation.add(pos, image)
             else:
-                native_image = PILHelper.to_native_format(self.stream_deck, image)
+                native_image = PILHelper.to_native_key_format(self.stream_deck, image)
                 self.stream_deck.set_key_image(pos, native_image)
                 self._animation.clear(pos)
         else:
             self.stream_deck.set_key_image(pos, None)
             self._animation.clear(pos)
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        pass
 
     def previous_scene(self):
         self.change_scene(self._last_scene)
@@ -190,7 +196,12 @@ class KeyScene(Scene):
                     and reg.key.clicked_on
                     < datetime.utcnow() - timedelta(milliseconds=500)
                 ):
-                    self._run_actions(ClickType.LONG_PRESS, reg.key)
+                    try:
+                        self._run_actions(ClickType.LONG_PRESS, reg.key)
+                    except TransportError:
+                        print("Transport error, resetting streamdeck")
+                        # streamdeck reset
+
             time.sleep(0.1)
 
     def _run_actions(self, click: ClickType, key: Key):
@@ -200,6 +211,8 @@ class KeyScene(Scene):
             try:
                 print(f"Running {action.__class__.__name__}")
                 action(self, key, click)
+            except TransportError:
+                raise
             except Exception as e:
                 print(f"Error running action {action}: {e}")
                 traceback.print_exc()
@@ -245,6 +258,10 @@ class KeyScene(Scene):
         self._click_thread = threading.Thread(target=self._check_long_click)
         self._click_thread.start()
 
+        for key in self._keys:
+            for hotkey in key.key.hotkeys:
+                self._deck.hotkeys.register_mouse_button(hotkey, lambda: self._run_actions(ClickType.CLICK, key.key))
+
     @staticmethod
     async def _run_updating_task(awaitable: Awaitable):
         try:
@@ -266,3 +283,4 @@ class KeyScene(Scene):
         self._deck.stream_deck.set_key_callback(None)
         self._active = False
         self._click_thread = None
+        self._deck.hotkeys.reset()
