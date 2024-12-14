@@ -88,6 +88,10 @@ def run(deck: Deck):
             ]
         ),
     )
+    scene1.add(
+        (0, 2),
+        OBSKey(text="Standing", actions=[obs.change_scene("Camera only (standing)")]),
+    )
 
     scene1.add(
         (0, 3),
@@ -143,7 +147,11 @@ def run(deck: Deck):
     scene1.add(
         (2, 0),
         FontAwesomeKey(name="regular/file-audio", tint="green", actions=[
-            SendHotkey(By.window_class("spotify.Spotify"), "space"),
+            #SendHotkey(By.window_class("spotify.Spotify"), "space"),
+            SendHotkey(None, "ctrl", "shift", "alt", "m"),
+            Wait(2),
+            SendHotkey(None, "space"),
+            SendHotkey(None, "ctrl", "shift", "alt", "m"),
         ]),
     )
 
@@ -164,6 +172,16 @@ def run(deck: Deck):
                 on_enable=EnableFilter(obs, "Webcam", "Shader - rain"),
                 on_disable=DisableFilter(obs, "Webcam", "Shader - rain")
             )]
+        ),
+    )
+    scene1.add(
+        (2, 3),
+        FontAwesomeKey(
+            "regular/window-restore",
+            text="",
+            actions=[
+                Command("/home/mrdon/dev/dev-machine/windows.py", "-restore")
+            ]
         ),
     )
 
@@ -415,10 +433,13 @@ def _build_webinar_scene_base(obs, parent_scene, presso, webinar_scene):
 
                    ])])
     )
+
     webinar_scene.add(
         (1, 4),
-        FontAwesomeKey("solid/camera", text="T Cam", actions=[obs.toggle_source("[Scene] Me corner (shadowed)"),
-                                                              ]),
+        FontAwesomeKey("solid/camera", text="Record", actions=[Toggle(
+            on_enable=obs.start_recording(vertical=True),
+            on_disable=obs.stop_recording(vertical=True),
+        )]),
     )
     webinar_scene.add(
         (2, 1),

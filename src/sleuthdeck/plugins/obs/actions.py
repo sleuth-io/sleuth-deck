@@ -127,16 +127,29 @@ class OBS:
             "sceneItemEnabled": enabled,
         })
 
-    def stop_recording(self):
-        return ObsAction(self, lambda obs: obs.call("StopRecord"))
+    def stop_recording(self, vertical=False):
+        def execute(obs):
+            obs.call("StopRecord")
+            if vertical:
+                obs.call("CallVendorRequest", {"vendorName": "aitum-vertical-canvas", "requestType": "stop_recording"})
 
-    def start_recording(self):
-        return ObsAction(self, lambda obs: obs.call("StartRecord"))
+        return ObsAction(self, execute)
+
+
+    def start_recording(self, vertical=False):
+        def execute(obs):
+            obs.call("StartRecord")
+            if vertical:
+                obs.call("CallVendorRequest", {"vendorName": "aitum-vertical-canvas", "requestType": "start_recording"})
+        return ObsAction(self, execute)
 
     def set_item_property(self, name: str, property: str, value: Any):
         self.call("SetInputSettings", {"inputName": name,
                                        "inputSettings": {property: value},
                                        "overlay": True})
+
+    def create_record_chapter(self, name: str):
+        self.call("CreateRecordChapter", {"chapterName": name})
 
     def get_filter_settings(self, source_name: str, filter_name: str):
         return self.call("GetSourceFilter", {"sourceName": source_name,

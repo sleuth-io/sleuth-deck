@@ -10,6 +10,8 @@ from datetime import timedelta
 from multiprocessing import Queue
 from types import ModuleType
 
+from StreamDeck.Transport.Transport import TransportError
+
 from sleuthdeck.deck import Deck
 from watchdog.events import FileSystemEventHandler
 
@@ -57,7 +59,7 @@ class ReloadingHandler(FileSystemEventHandler):
                     self.deck.close()
                 try:
                     deck = Deck()
-                except RuntimeError as e:
+                except (RuntimeError, TransportError):
                     print("No streamdeck found, waiting 5s")
                     time.sleep(5)
                     self.deck = None
@@ -70,6 +72,7 @@ class ReloadingHandler(FileSystemEventHandler):
                 except Exception as e:
                     print(f"Error: {e}")
                     traceback.print_exc()
+                    self.deck = None
                     continue
                 while self.deck.stream_deck.is_open() and self._reloading_queue.empty():
                     time.sleep(1)

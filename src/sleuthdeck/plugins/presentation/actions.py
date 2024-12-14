@@ -46,6 +46,7 @@ class Presentation:
         self.guest2_name_item = guest2_name_item
         self.guest2_title_item = guest2_title_item
 
+        self.current_section_idx = 0
         try:
             self._reload()
         except ConnectionError:
@@ -54,11 +55,11 @@ class Presentation:
         if not self.event.sections:
             return
 
-        self.current_section_idx = 0
         self.title_scene_item = title_scene_item
         self.byline_scene_item = byline_scene_item
         self.title_scene = title_scene
         self.overlay_scene = overlay_scene
+        self._recording = False
 
     def _reload(self):
         with open(self.path, "r") as stream:
@@ -95,6 +96,7 @@ class Presentation:
             section = self._next_section()
 
             self._update_labels(section, next_scene=section.scene)
+            self.obs.create_record_chapter(section.title)
 
         return action
 
@@ -104,6 +106,18 @@ class Presentation:
                 self._reload()
             self.current_section_idx = 0
             self._update_labels(self.event.sections[0])
+            self.obs.create_record_chapter(self.event.sections[self.current_section_idx].title)
+
+        return action
+
+    def toggle_record(self) -> Action:
+        def action(scene: KeyScene, key: Key, click: ClickType):
+            if self._recording:
+                self.obs.stop_recording(vertical=True)
+                self._recording = False
+            else:
+                self.obs.start_recording(vertical=True)
+                self._recording = True
 
         return action
 
@@ -111,6 +125,7 @@ class Presentation:
         def action(scene: KeyScene, key: Key, click: ClickType):
             section = self._previous_section()
             self._update_labels(section, next_scene=section.scene)
+            self.obs.create_record_chapter(section.title)
 
         return action
 

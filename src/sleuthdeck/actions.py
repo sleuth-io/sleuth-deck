@@ -145,24 +145,28 @@ class MoveWindow(Action):
 
 
 class SendHotkey(Action):
-    def __init__(self, title: Union[str, By], *hotkey: str):
+    def __init__(self, title: Union[str, By] | None, *hotkey: str):
         self.title = title
         self.hotkey = hotkey
 
     def __call__(self, scene: KeyScene, key: Key, click: ClickType):
         print("sending key")
-        focused_window = get_focused_window()
 
-        window = get_window(self.title, attempts=5 * 10)
-        if not window:
-            print(f"No window found for {self.title}")
-            return
-        print(f"got window {self.title}")
-        window.focus()
+        focused_window = get_focused_window()
+        if self.title:
+
+            window = get_window(self.title, attempts=5 * 10)
+            if not window:
+                print(f"No window found for {self.title}")
+                return
+            print(f"got window {self.title}")
+            window.focus()
+
         from pyautogui import hotkey
         hotkey(*self.hotkey)
         print("sent")
-        focused_window.focus()
+        if self.title:
+            focused_window.focus()
 
 
 class DeckBrightness(Action):
